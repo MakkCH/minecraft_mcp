@@ -2,6 +2,10 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.19.3'
 }
 repositories {
+    maven {
+        url = 'https://maven.terraformersmc.com/'
+        content { includeGroup 'com.terraformersmc' }
+    }
     ivy {
         url = 'https://github.com/grepsedawk/JsMacros/releases/download'
         patternLayout { artifact 'v[revision]/jsmacros-26.3-[revision]-fabric.[ext]' }
@@ -17,6 +21,8 @@ dependencies {
     implementation "net.fabricmc.fabric-api:fabric-key-mapping-api-v1:2.0.8+3434d6d95d"
     compileOnly "xyz.wagyourtail:jsmacros:${jsmacros_version}"
     runtimeOnly "xyz.wagyourtail:jsmacros:${jsmacros_version}"
+    // Available in the development client, but not bundled or required by the mod.
+    implementation "com.terraformersmc:modmenu:${modmenu_version}"
 }
 sourceSets.main {
     java.srcDirs = ['mod/src/main/java']

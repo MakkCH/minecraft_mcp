@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Vanilla UI: available through F8 or /mcp config, without a separate UI mod. */
+/** Vanilla UI shared by Mod Menu, F8 and /mcp config. */
 public final class SettingsScreen extends Screen {
     private final Screen parent;
     private final MinecraftMcpClient owner;
