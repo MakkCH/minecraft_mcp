@@ -6,8 +6,6 @@ const cfg = JSON.parse(String(Files.readString(base.resolve('config.json'))));
 Reflection.loadJarFile(String(base.resolve('minecraft-mcp-bridge.jar')));
 const bridge = Reflection.newInstance(Reflection.getClass('minecraft.mcp.Bridge'),
     cfg.port, cfg.token, cfg.autoStart !== false, cfg.outputLimit || 65536);
-const BaritoneAPI = Java.type('baritone.api.BaritoneAPI');
-const baritone = BaritoneAPI.getProvider().getPrimaryBaritone();
 const contexts = new Map();
 const text = value => String(value);
 
@@ -26,11 +24,18 @@ function releaseControls() {
     let failure = null;
     Client.runOnMainThread(JavaWrapper.methodToJava(() => {
         try {
-            baritone.getPathingBehavior().forceCancel();
-            baritone.getInputOverrideHandler().clearAllKeys();
-            for (const key of KeyBind.getPressedKeys()) KeyBind.releaseKey(String(key));
+            // Optional takeover cleanup only: Baritone can outlive its initiating script.
+            // Gameplay and API discovery remain ordinary Java interop in the Skill.
+            if (Client.isModLoaded('baritone')) {
+                const bot = Java.type('baritone.api.BaritoneAPI').getProvider().getPrimaryBaritone();
+                try { bot.getPathingBehavior().forceCancel(); }
+                finally { bot.getInputOverrideHandler().clearAllKeys(); }
+            }
         } catch (e) { failure = String(e); }
-    }), true, 500);
+        finally {
+            for (const key of KeyBind.getPressedKeys()) KeyBind.releaseKey(String(key));
+        }
+    }), true, 5000);
     if (failure) throw new Error('Could not release controls: ' + failure);
 }
 function stopAll() {
@@ -38,7 +43,7 @@ function stopAll() {
     releaseControls();
 }
 function status() {
-    return { enabled: bridge.isEnabled(), baritone: true,
+    return { enabled: bridge.isEnabled(),
         activeTasks: Java.from(bridge.getJobs()).filter(j => ['running','active'].includes(String(j.status()))).length };
 }
 function announce(message) {
@@ -65,7 +70,20 @@ globalThis.console = Object.freeze(Object.fromEntries(['log','info','warn','erro
   [k, (...args) => __mcpJob.write((k === 'log' ? '' : '[' + k + '] ') + args.map(__mcpFormat).join(' '))])));
 globalThis.print = (...args) => console.log(...args);
 // Track native Draw2D/Draw3D/CommandBuilder registrations for stop cleanup.
-globalThis.mcp = Object.freeze({ track: obj => { __mcpJob.track(obj); return obj; } });
+globalThis.mcp = Object.freeze({
+  track: obj => { __mcpJob.track(obj); return obj; },
+  mainThread: fn => {
+    if (typeof fn !== 'function') throw new TypeError('mcp.mainThread expects a function');
+    let result, failure, failed = false;
+    // await=true yields GraalJS's context lock while Minecraft runs this callback.
+    Client.runOnMainThread(JavaWrapper.methodToJava(() => {
+      try { result = fn(); }
+      catch (e) { failed = true; failure = e; }
+    }), true, 5000);
+    if (failed) throw failure;
+    return result;
+  }
+});
 `;
     const callback = JavaWrapper.methodToJavaAsync(error => job.finish(error == null ? null : String(error)));
     const container = JsMacros.runScript('js', prelude + '\n' + req.code,
@@ -100,7 +118,7 @@ function handle(request) {
                         else request.complete(JSON.stringify({error:'Screenshot failed: ' + result}));
                     }));
                 } catch (e) { request.complete(JSON.stringify({error:String(e)})); }
-            }));
+            }), true, 5000);
         } else throw new Error('Unknown operation');
     } catch (e) { request.complete(JSON.stringify({error:String(e)})); }
 }

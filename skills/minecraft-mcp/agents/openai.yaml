@@ -1,4 +1,4 @@
 interface:
   display_name: "Minecraft MCP"
-  short_description: "Control Minecraft with JsMacros and Baritone"
+  short_description: "Control Minecraft with JsMacros and installed mods"
   default_prompt: "Use $minecraft-mcp to inspect my Minecraft client and carry out the requested task."

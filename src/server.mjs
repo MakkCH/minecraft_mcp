@@ -28,7 +28,7 @@ const safe = fn => async args => {
   catch (error) { return {isError:true, content:[{type:'text', text:`${error.message}${error.cause ? ': '+error.cause.message : ''}. Check Minecraft and /mcp status. Config: ${configPath}`} ]}; }
 };
 server.registerTool('execute', {
-  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native Player/World/Hud/Java APIs and Baritone are available. console.log/print are captured. Returns early with task ID when still running; use read_output. This is GraalJS, not Node.js.',
+  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Returns early with task ID when still running; use read_output. This is GraalJS, not Node.js.',
   inputSchema:{code:z.string().max(900000).optional(), file:z.string().optional(), wait_ms:z.number().int().min(0).max(10000).default(1000)}
 }, safe(async ({code,file,wait_ms}) => {
   if ((code === undefined) === (file === undefined)) throw new Error('Provide exactly one of code or file');

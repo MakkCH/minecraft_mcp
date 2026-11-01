@@ -52,7 +52,7 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     const syntax=await json('execute',{code:'const = ;',wait_ms:1000});
     assert.equal(syntax.status,'error');
     // Real Baritone pathfinding must move the actual player to the requested goal.
-    const nav=await collect(await json('execute',{file:root+'examples/baritone-nearby.js',wait_ms:0}), r=>r.output.includes('NAVIGATION=') || r.status==='error');
+    const nav=await collect(await json('execute',{file:root+'skills/minecraft-mcp/scripts/baritone-nearby.js',wait_ms:0}), r=>r.output.includes('NAVIGATION=') || r.status==='error');
     await call('stop',{task:nav.task});
     const movement=JSON.parse(nav.output.trim().split('NAVIGATION=').at(-1));
     assert.equal(movement.reached,true,JSON.stringify(movement));
@@ -61,7 +61,7 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     // Check real renderer registration and teardown, not a simulated resource list.
     const drawCount=async () => Number((await collect(await json('execute',{code:'console.log(Hud.listDraw3Ds().size());'}))).output.trim());
     const beforeDraw=await drawCount();
-    const marker=await collect(await json('execute',{file:root+'examples/marker.js'}));
+    const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/scripts/marker.js'}));
     assert.match(marker.output,/MARKER_REGISTERED/);
     assert.equal(await drawCount(),beforeDraw+1);
     const marked=await call('screenshot');

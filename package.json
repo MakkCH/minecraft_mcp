@@ -10,6 +10,7 @@
     "start": "node src/server.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/protocol.test.mjs",
+    "test:runtime": "node --test tests/runtime.test.mjs",
     "test:live": "node --test tests/live.test.mjs"
   },
   "dependencies": {
