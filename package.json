@@ -1,11 +1,14 @@
 {
   "name": "minecraft-mcp",
   "version": "0.2.1",
+  "author": {"name": "Mak", "url": "https://github.com/MakkCH"},
+  "license": "MIT",
   "private": true,
   "files": [
     "src",
     "skills",
     "README.md",
+    "LICENSE",
     ".codex-plugin",
     ".mcp.json",
     "assets"

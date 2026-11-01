@@ -25,7 +25,9 @@ sourceSets.main {
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand version: project.version }
+    from('assets/icon.png') { into 'assets/minecraft_mcp' }
 }
+tasks.withType(Jar).configureEach { from('LICENSE') }
 tasks.withType(JavaCompile).configureEach { options.release = 25 }
 java {
     sourceCompatibility = JavaVersion.VERSION_25
