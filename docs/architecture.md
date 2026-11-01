@@ -11,6 +11,6 @@ Execution returns captured console output, errors and native task state. Fresh c
 
 A stalled game main thread can prevent command dispatch and screenshots. Network request timeouts do not imply an already dispatched game action was undone. Do not automatically retry mutations. `/mcp stop` cannot undo irreversible in-game actions or arbitrary native Java side effects.
 
-Sources: JsMacros Reloaded v2.2.1 FJsMacros, ServiceManager, EventService, FPlayer, FClient; Baritone v1.20.0 API; official MCP TypeScript SDK 1.32.2. Source links are in api-index.txt.
+Sources: JsMacros Reloaded v2.2.1 FJsMacros, ServiceManager, EventService, FPlayer, FClient; Baritone v1.20.0 API; official MCP TypeScript SDK 1.32.2. Source links are in the [Skill API index](../skills/minecraft-mcp/references/api-index.txt).
 
 Unhandled errors in later native callbacks can be reported by JsMacros to the game log rather than the completed script callback. Use try/catch with console.error in long-lived event handlers. `active` indicates an open native callback context, not proof that a particular game action is still running.

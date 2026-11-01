@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const configPath = process.env.MINECRAFT_MCP_CONFIG || resolve(root, '.runtime/config.json');
 const server = new McpServer({name:'minecraft_mcp', version:'0.1.0'}, {
-  instructions: `Controls the player's real Minecraft client through JsMacros and Baritone. Use local fs/shell to edit scripts and search ${root}/docs. execute runs fresh JsMacros scripts, not Node.js. Use console.log for output, read_output for incremental results. Player /mcp stop takes priority. Chat output is local to the player. Read ${root}/docs/quickstart.md before using game APIs.`
+  instructions: `Controls the player's real Minecraft client. Follow the minecraft-mcp skill at ${root}/skills/minecraft-mcp/SKILL.md for workflows and API lookup. Player /mcp stop takes priority.`
 });
 async function request(path, body) {
   const cfg = JSON.parse(await readFile(configPath, 'utf8'));

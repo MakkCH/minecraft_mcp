@@ -1,6 +1,6 @@
 # minecraft_mcp
 
-A small local MCP bridge to the player's Minecraft client: execute JsMacros scripts, read incremental output, stop, screenshot, and display colored Agent progress in chat. Native JsMacros contexts/services own execution; ordinary filesystem and shell tools own engineering work.
+A companion Agent Skill and small local MCP bridge to the player's Minecraft client: execute JsMacros scripts, read incremental output, stop, screenshot, and display colored Agent progress in chat. Native JsMacros contexts/services own execution; ordinary filesystem and shell tools own engineering work.
 
 Target: Minecraft **26.3**, Fabric **0.19.5**, JsMacros Reloaded **2.2.1**, Baritone **1.20.0**. Node >=22 and JDK >=21 are required to build the bridge. The game uses Java 25 for Minecraft 26.3.
 
@@ -21,6 +21,14 @@ Register with Codex:
 codex mcp add minecraft_mcp --env MINECRAFT_MCP_CONFIG=/absolute/path/to/config.json -- node /absolute/path/to/minecraft_mcp/src/server.mjs
 ```
 
+Install the companion Skill from the repository root (keep this checkout in place):
+```sh
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+ln -s "$PWD/skills/minecraft-mcp" "${CODEX_HOME:-$HOME/.codex}/skills/minecraft-mcp"
+```
+
+The Skill teaches task execution, incremental output, player takeover, Baritone and API lookup; MCP supplies the five client tools. Invoke `$minecraft-mcp` on your next turn, or let Codex select it for Minecraft tasks. The symlink keeps the installed Skill synchronized with this repository. Detailed references load only when needed. If the destination already exists, inspect it before replacing it.
+
 Keep the Minecraft instance running. `/mcp status` reports connection state; `/mcp stop` disables the bridge's game actions and relinquishes control; `/mcp start` enables them again. These are client-side commands and are not sent to a server. The bootstrap service starts automatically at client startup. Disconnect cancels old tasks and releases controls without changing the enable flag.
 
 Chat defaults to aqua `[AGENT]` and white message text. `chat.tag`, `tagColor`, optional `name`, `nameColor`, and `messageColor` are configurable using Minecraft text colors or hex colors. Config changes take effect after restarting the bootstrap service/client. Tag/name formatting is applied to local chat only.
@@ -31,4 +39,4 @@ The bridge binds only `127.0.0.1` and requires a random bearer secret. `MINECRAF
 
 `npm test` uses the official MCP SDK client against the actual stdio server for protocol negotiation and schema validation. `npm run test:live` requires a real running client in a disposable single-player world and exercises native Java/game APIs, incremental output, cooperative and busy-loop cancellation, key release, real Baritone movement, /mcp stop/start, native overlay registration/cleanup, errors, colored local chat and PNG capture. No mocks or fake game implementations. Tests fail if Minecraft is unavailable.
 
-[Agent quickstart](docs/quickstart.md) · [API index](docs/api-index.txt) · [Architecture](docs/architecture.md) · [Verified behavior](docs/validation.md)
+[Agent Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Architecture](docs/architecture.md) · [Verified behavior](docs/validation.md)
