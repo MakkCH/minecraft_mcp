@@ -1,0 +1,344 @@
+JsMacros Reloaded 2.2.1 / Minecraft 26.3 — compact signature index
+Search with rg. Java types describe GraalJS interop; JavaWrapper converts callbacks.
+Source Javadocs contain detailed semantics. Do not treat this as Node.js.
+
+FPlayer.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FPlayer.java
+public FPlayer(Core<?, ?> runner)
+public Inventory<?> openInventory()
+public ClientPlayerEntityHelper<LocalPlayer> getPlayer()
+public InteractionManagerHelper getInteractionManager()
+public InteractionManagerHelper interactions()
+public String getGameMode()
+public void setGameMode(String gameMode)
+public BlockDataHelper rayTraceBlock(double distance, boolean fluid)
+public HitResultHelper.Block detailedRayTraceBlock(double distance, boolean fluid)
+public EntityHelper<?> rayTraceEntity()
+public EntityHelper<?> rayTraceEntity(int distance)
+public boolean writeSign(@Nullable String l1, @Nullable String l2, @Nullable String l3, @Nullable String l4)
+public boolean writeSign(int index, String message)
+public void takeScreenshot(String folder, @Nullable MethodWrapper<TextHelper, Object, Object, ?> callback)
+public void takeScreenshot(String folder, String file, @Nullable MethodWrapper<TextHelper, Object, Object, ?> callback)
+public void takePanorama(String folder, int width, int height, @Nullable MethodWrapper<TextHelper, Object, Object, ?> callback)
+public StatsHelper getStatistics()
+public double getReach()
+public PlayerInput createPlayerInput()
+public PlayerInput createPlayerInput(double movementForward, double movementSideways, double yaw)
+public PlayerInput createPlayerInput(double movementForward, double yaw, boolean jumping, boolean sprinting)
+public PlayerInput createPlayerInput(double movementForward, double movementSideways, double yaw, double pitch, boolean jumping, boolean sneaking, boolean sprinting)
+public List<PlayerInput> createPlayerInputsFromCsv(String csv) throws NoSuchFieldException, IllegalAccessException
+public PlayerInput createPlayerInputsFromJson(String json)
+public PlayerInput getCurrentPlayerInput()
+public void addInput(PlayerInput input)
+public void addInputs(PlayerInput[] inputs)
+public void clearInputs()
+public void setDrawPredictions(boolean val)
+public Pos3D predictInput(PlayerInput input)
+public Pos3D predictInput(PlayerInput input, boolean draw)
+public List<Pos3D> predictInputs(PlayerInput[] inputs)
+public boolean isBreakingBlock()
+public List<Pos3D> predictInputs(PlayerInput[] inputs, boolean draw)
+public void moveForward(double yaw)
+public void moveBackward(double yaw)
+public void moveStrafeLeft(double yaw)
+public void moveStrafeRight(double yaw)
+
+FWorld.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FWorld.java
+public static double serverInstantTPS = 20;
+public static double server1MAverageTPS = 20;
+public static double server5MAverageTPS = 20;
+public static double server15MAverageTPS = 20;
+public FWorld(Core<?, ?> runner)
+public boolean isWorldLoaded()
+public List<PlayerEntityHelper<Player>> getLoadedPlayers()
+public List<PlayerListEntryHelper> getPlayers()
+public PlayerListEntryHelper getPlayerEntry(String name)
+public BlockDataHelper getBlock(int x, int y, int z)
+public BlockDataHelper getBlock(Pos3D pos)
+public BlockDataHelper getBlock(BlockPosHelper pos)
+public ChunkHelper getChunk(int x, int z)
+public WorldScannerBuilder getWorldScanner()
+public WorldScanner getWorldScanner(@Nullable MethodWrapper<BlockHelper, Object, Boolean, ?> blockFilter, @Nullable MethodWrapper<BlockStateHelper, Object, Boolean, ?> stateFilter)
+public List<Pos3D> findBlocksMatching(int centerX, int centerZ, String id, int chunkrange)
+public List<Pos3D> findBlocksMatching(String id, int chunkrange)
+public List<Pos3D> findBlocksMatching(String[] ids, int chunkrange)
+public List<Pos3D> findBlocksMatching(int centerX, int centerZ, String[] ids, int chunkrange)
+public List<Pos3D> findBlocksMatching(MethodWrapper<BlockHelper, Object, Boolean, ?> blockFilter, @Nullable MethodWrapper<BlockStateHelper, Object, Boolean, ?> stateFilter, int chunkrange)
+public List<Pos3D> findBlocksMatching(int chunkX, int chunkZ, MethodWrapper<BlockHelper, Object, Boolean, ?> blockFilter, @Nullable MethodWrapper<BlockStateHelper, Object, Boolean, ?> stateFilter, int chunkrange)
+public void iterateSphere(BlockPosHelper pos, int radius, MethodWrapper<BlockDataHelper, ?, ?, ?> callback)
+public void iterateSphere(BlockPosHelper pos, int radius, boolean ignoreAir, MethodWrapper<BlockDataHelper, ?, ?, ?> callback)
+public void iterateBox(BlockPosHelper pos1, BlockPosHelper pos2, MethodWrapper<BlockDataHelper, ?, ?, ?> callback)
+public void iterateBox(BlockPosHelper pos1, BlockPosHelper pos2, boolean ignoreAir, MethodWrapper<BlockDataHelper, ?, ?, ?> callback)
+public ScoreboardsHelper getScoreboards()
+public List<EntityHelper<?>> getEntities()
+public List<EntityHelper<?>> getEntities(String... types)
+public List<EntityHelper<?>> getEntities(double distance)
+public List<EntityHelper<?>> getEntities(double distance, String... types)
+public List<EntityHelper<?>> getEntities(MethodWrapper<EntityHelper<?>, ?, ?, ?> filter)
+public BlockDataHelper rayTraceBlock(double x1, double y1, double z1, double x2, double y2, double z2, boolean fluid)
+public EntityHelper<?> rayTraceEntity(double x1, double y1, double z1, double x2, double y2, double z2)
+public String getDimension()
+public String getBiome()
+public long getTime()
+public long getTimeOfDay()
+public boolean isDay()
+public boolean isNight()
+public boolean isRaining()
+public boolean isThundering()
+public String getWorldIdentifier()
+public BlockPosHelper getRespawnPos()
+public int getDifficulty()
+public int getMoonPhase()
+public int getSkyLight(int x, int y, int z)
+public int getBlockLight(int x, int y, int z)
+public Clip playSoundFile(String file, double volume) throws LineUnavailableException, IOException, UnsupportedAudioFileException
+public void playSound(String id)
+public void playSound(String id, double volume)
+public void playSound(String id, double volume, double pitch)
+public void playSound(String id, double volume, double pitch, double x, double y, double z)
+public Map<String, BossBarHelper> getBossBars()
+public boolean isChunkLoaded(int chunkX, int chunkZ)
+public String getCurrentServerAddress()
+public String getBiomeAt(int x, int z)
+public String getBiomeAt(int x, int y, int z)
+public String getServerTPS()
+public TextHelper getTabListHeader()
+public TextHelper getTabListFooter()
+public void spawnParticle(String id, double x, double y, double z, int count)
+public void spawnParticle(String id, double x, double y, double z, double deltaX, double deltaY, double deltaZ, double speed, int count, boolean force)
+public ClientLevel getRaw()
+public double getServerInstantTPS()
+public double getServer1MAverageTPS()
+public double getServer5MAverageTPS()
+public double getServer15MAverageTPS()
+
+FHud.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FHud.java
+public static final Set<IDraw2D<Draw2D>> overlays = ConcurrentHashMap.newKeySet();
+public static final Set<Draw3D> renders = ConcurrentHashMap.newKeySet();
+public FHud(Core<?, ?> runner)
+public ScriptScreen createScreen(String title, boolean dirtBG)
+public void openScreen(@Nullable IScreen s)
+public IScreen getOpenScreen()
+public CustomImage createTexture(int width, int height, @Nullable String name)
+public CustomImage createTexture(String path, @Nullable String name)
+public Map<String, CustomImage> getRegisteredTextures()
+public int getScaleFactor()
+public String getOpenScreenName()
+public boolean isContainer()
+public Draw2D createDraw2D()
+public void registerDraw2D(IDraw2D<Draw2D> overlay)
+public void unregisterDraw2D(IDraw2D<Draw2D> overlay)
+public List<IDraw2D<Draw2D>> listDraw2Ds()
+public void clearDraw2Ds()
+public Draw3D createDraw3D()
+public void registerDraw3D(Draw3D draw)
+public void unregisterDraw3D(Draw3D draw)
+public List<Draw3D> listDraw3Ds()
+public void clearDraw3Ds()
+public double getMouseX()
+public double getMouseY()
+public int getWindowWidth()
+public int getWindowHeight()
+
+FClient.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FClient.java
+public static TickSync tickSynchronizer = new TickSync();
+public FClient(BaseScriptContext<?> context)
+public Minecraft getMinecraft()
+public RegistryHelper getRegistryManager()
+public PacketByteBufferHelper createPacketByteBuffer()
+public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable) throws InterruptedException
+public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable, long watchdogMaxTime) throws InterruptedException
+public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable, boolean await, long watchdogMaxTime) throws InterruptedException
+public boolean joined()
+public EventContainer<?> trigger(BaseEvent event)
+public String toString()
+public OptionsHelper getGameOptions()
+public String mcVersion()
+public String getFPS()
+public void loadWorld(String folderName) throws LevelStorageException
+public void connect(String ip)
+public void connect(String ip, int port)
+public void disconnect()
+public void disconnect(@Nullable MethodWrapper<Boolean, Object, Object, ?> callback)
+public void shutdown()
+public void waitTick() throws InterruptedException
+public void waitTick(int i) throws InterruptedException
+public ServerInfoHelper ping(String ip) throws UnknownHostException, InterruptedException
+public void pingAsync(String ip, MethodWrapper<ServerInfoHelper, IOException, Object, ?> callback)
+public void cancelAllPings()
+public List<? extends ModContainerHelper<?>> getLoadedMods()
+public boolean isModLoaded(String modId)
+public ModContainerHelper<?> getMod(String modId)
+public void grabMouse()
+public boolean isDevEnv()
+public String getModLoader()
+public List<BlockHelper> getRegisteredBlocks()
+public List<ItemHelper> getRegisteredItems()
+public void exitGamePeacefully()
+public void exitGameForcefully()
+public void sendPacket(Packet<?> packet)
+public void receivePacket(Packet<ClientGamePacketListener> packet)
+public String getClipboard()
+public void setClipboard(String text)
+
+FChat.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FChat.java
+public FChat(Core<?, ?> runner)
+public void log(@Nullable Object message) throws InterruptedException
+public void log(@Nullable Object message, boolean await) throws InterruptedException
+public void logf(String message, Object... args) throws InterruptedException
+public void logf(String message, boolean await, Object... args) throws InterruptedException
+public void logColor(String message) throws InterruptedException
+public void logColor(String message, boolean await) throws InterruptedException
+public void say(@Nullable String message) throws InterruptedException
+public void say(@Nullable String message, boolean await) throws InterruptedException
+public void sayf(String message, Object... args) throws InterruptedException
+public void sayf(String message, boolean await, Object... args) throws InterruptedException
+public void open(@Nullable String message) throws InterruptedException
+public void open(@Nullable String message, boolean await) throws InterruptedException
+public void title(Object title, Object subtitle, int fadeIn, int remain, int fadeOut)
+public void actionbar(Object text)
+public void actionbar(Object text, boolean tinted)
+public void toast(Object title, Object desc)
+public TextHelper createTextHelperFromString(String content)
+public TextHelper createTextHelperFromTranslationKey(String key, Object... content)
+public Logger getLogger()
+public Logger getLogger(String name)
+public TextHelper createTextHelperFromJSON(String json)
+public TextBuilder createTextBuilder()
+public CommandBuilder createCommandBuilder(String name)
+public CommandNodeHelper unregisterCommand(String name) throws IllegalAccessException
+public void reRegisterCommand(CommandNodeHelper node)
+public CommandManager getCommandManager()
+public ChatHistoryManager getHistory()
+public int getTextWidth(@Nullable String text)
+public String sectionSymbolToAmpersand(String string)
+public String ampersandToSectionSymbol(String string)
+public String stripFormatting(String string)
+
+FKeyBind.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FKeyBind.java
+public FKeyBind(Core<?, ?> runner)
+public Key getKeyCode(String keyName)
+public Map<String, String> getKeyBindings()
+public void setKeyBind(String bind, @Nullable String key)
+public void key(String keyName, boolean keyState)
+public void pressKey(String keyName)
+public void releaseKey(String keyName)
+public void keyBind(String keyBind, boolean keyState)
+public void pressKeyBind(String keyBind)
+public void releaseKeyBind(String keyBind)
+public Set<String> getPressedKeys()
+public static class KeyTracker
+public synchronized static void press(Key key)
+public synchronized static void press(KeyMapping bind)
+public synchronized static void unpress(Key key)
+public synchronized static void unpress(KeyMapping bind)
+public static synchronized Set<String> getPressedKeys()
+
+FJsMacros.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/core/java/xyz/wagyourtail/jsmacros/core/library/impl/FJsMacros.java
+public FJsMacros(BaseScriptContext<?> context)
+public BaseProfile getProfile()
+public ConfigManager getConfig()
+public ServiceManager getServiceManager()
+public List<BaseScriptContext<?>> getOpenContexts()
+public EventContainer<?> runScript(String file)
+public EventContainer<?> runScript(String file, @Nullable BaseEvent fakeEvent)
+public EventContainer<?> runScript(String file, @Nullable BaseEvent fakeEvent, @Nullable MethodWrapper<Throwable, Object, Object, ?> callback)
+public EventContainer<?> runScript(String language, String script)
+public EventContainer<?> runScript(String language, String script, @Nullable MethodWrapper<Throwable, Object, Object, ?> callback)
+public EventContainer<?> runScript(String language, String script, @Nullable String file, @Nullable MethodWrapper<Throwable, Object, Object, ?> callback)
+public EventContainer<?> runScript(String language, String script, @Nullable String file, @Nullable BaseEvent event, @Nullable MethodWrapper<Throwable, Object, Object, ?> callback)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRun(String file)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRun(String language, String script)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRun(String language, String script, @Nullable String file)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRunAsync(String file)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRunAsync(String language, String script)
+public <T, U, R> MethodWrapper<T, U, R, ?> wrapScriptRunAsync(String language, String script, @Nullable String file)
+public void open(String path) throws IOException
+public void openUrl(String url) throws IOException
+public IEventListener on(String event, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public IEventListener on(String event, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public IEventListener on(String event, EventFilterer filterer, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public IEventListener on(String event, EventFilterer filterer, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public boolean joined()
+public EventContainer<?> trigger(BaseEvent e)
+public String getCreatorName()
+public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
+public BaseScriptContext<?> getCtx()
+public void off()
+public String toString()
+public IEventListener once(String event, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public IEventListener once(String event, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
+public boolean joined()
+public EventContainer<?> trigger(BaseEvent e)
+public String getCreatorName()
+public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
+public BaseScriptContext<?> getCtx()
+public void off()
+public String toString()
+public boolean off(IEventListener listener)
+public boolean off(String event, IEventListener listener)
+public void disableAllListeners(String event)
+public void disableAllListeners()
+public void disableScriptListeners(String event)
+public void disableScriptListeners()
+public EventAndContext<?> waitForEvent(String event) throws InterruptedException
+public EventAndContext<?> waitForEvent(String event, boolean join) throws InterruptedException
+public EventAndContext<?> waitForEvent(String event, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter) throws InterruptedException
+public EventAndContext<?> waitForEvent(String event, boolean join, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter) throws InterruptedException
+public EventAndContext<?> waitForEvent(String event, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter, @Nullable MethodWrapper<Object, Object, Object, ?> runBeforeWaiting) throws InterruptedException
+public EventAndContext<?> waitForEvent(String event, boolean join, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter, @Nullable MethodWrapper<Object, Object, Object, ?> runBeforeWaiting) throws InterruptedException
+public boolean joined()
+public EventContainer<?> trigger(BaseEvent evt)
+public String getCreatorName()
+public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
+public BaseScriptContext<?> getCtx()
+public void off()
+public String toString()
+public List<IEventListener> listeners(String event)
+public EventFilterer createEventFilterer(String event)
+public FiltererComposed createComposedEventFilterer(EventFilterer initial)
+public FiltererModulus createModulusEventFilterer(int quotient)
+public EventFilterer invertEventFilterer(EventFilterer base)
+public EventCustom createCustomEvent(String eventName)
+public void assertEvent(BaseEvent event, String type)
+public static class EventAndContext<E extends BaseEvent>
+public final E event;
+public final EventContainer<?> context;
+public EventAndContext(E event, EventContainer<?> context)
+public String toString()
+
+ServiceManager.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/core/java/xyz/wagyourtail/jsmacros/core/service/ServiceManager.java
+public ServiceManager(Core<?, ?> runner)
+public synchronized boolean registerService(String name, String pathToFile)
+public synchronized boolean registerService(String name, String pathToFile, boolean enabled)
+public synchronized boolean registerService(String name, ServiceTrigger trigger)
+public synchronized boolean unregisterService(String name)
+public synchronized void disableReload(String serviceName)
+public synchronized boolean renameService(String oldName, String newName)
+public synchronized Set<String> getServices()
+public synchronized ServiceStatus startService(String name)
+public synchronized ServiceStatus stopService(String name)
+public static void setAutoUnregisterKeepAlive(@NotNull BaseScriptContext<?> ctx, boolean keepAlive)
+public static boolean hasKeepAlive(@NotNull BaseScriptContext<?> ctx)
+public synchronized ServiceStatus restartService(String name)
+public synchronized ServiceStatus enableService(String name)
+public synchronized ServiceStatus disableService(String name)
+public synchronized boolean isRunning(String name)
+public synchronized boolean isEnabled(String name)
+public synchronized ServiceStatus status(String name)
+public EventService getServiceData(String name)
+public ServiceTrigger getTrigger(String name)
+public synchronized void load()
+public synchronized void save()
+public void stopReloadListener()
+public void startReloadListener()
+public void markCrashed(String serviceName)
+public boolean isCrashed(String serviceName)
+public void tickReloadListener()
