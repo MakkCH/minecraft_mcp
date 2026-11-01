@@ -1,34 +1,68 @@
-# minecraft_mcp
+<p align="center">
+  <img src="assets/icon.svg" width="96" height="96" alt="Minecraft MCP" />
+</p>
 
-A client mod, MCP server and Agent Skill for controlling Minecraft through JsMacros. The player watches the actual client, can interact normally and can take over with `/mcp stop`. Agents use five tools—execute, incremental output, stop, screenshot and local chat—alongside their normal filesystem and shell.
+# Minecraft MCP
 
-The Minecraft mod and MCP server are installed, configured and updated independently. They communicate over an authenticated loopback connection; they do not share a config file or screenshot directory.
+**Let an AI agent play in your Minecraft client, while you watch and stay in control.**
 
-## Install the Minecraft mod
+Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gather resources, build or debug a script. You see what happens from your own player’s perspective and can take over with `/mcp stop`.
 
-1. Use a compatible **Minecraft Java Edition / Fabric** instance with **JsMacros Reloaded**. **Baritone is strongly recommended** for navigation, mining and building, but is not required to start the mod or execute scripts.
-2. Put `minecraft-mcp-0.2.0.jar` in the instance's `mods/` folder and launch Minecraft. This build targets **Minecraft 26.3, Java 25, Fabric Loader >=0.19.5 and JsMacros Reloaded 2.2.1**. The required Fabric lifecycle/command/key-mapping modules are also bundled by that JsMacros release.
-3. Press **F8** (rebindable in Controls) or enter **`/mcp config`** to open the mod settings.
-4. Choose a port, copy or set a token, and configure automatic startup and chat appearance. Apply saves the settings and stops current agent tasks. Different simultaneously running instances need different ports.
+It comes in two parts: a **Minecraft client mod** and an **agent plugin containing the MCP server and Skill**. Install and update them independently. Both run on your computer.
 
-The mod manages its own `config/minecraft_mcp.json`; users do not need to edit it. Tokens are hidden in the UI until explicitly shown, and can be copied or regenerated. Keep the same token in the separate MCP setup below. A port conflict or invalid settings is shown in the UI, without crashing Minecraft.
+## What you can do
 
-The mod adds its own settings and a key binding. It does not install other mods, change world generation or add blocks/items/entities. Agent gameplay can of course change the world and inventory. Removing the mod disables the integration without requiring save conversion.
+- **Play together.** The agent controls your real client, with progress messages in local chat.
+- **Automate with scripts.** JsMacros runs JavaScript in the game; the agent uses its usual editor, files and shell to develop scripts.
+- **See and debug.** Capture the game view, read script output as it arrives, and draw markers in the world.
+- **Use your installed mods.** The Skill teaches the agent how to discover their APIs. Baritone adds navigation, mining and building automation.
+- **Take over.** Stop the agent’s scripts and release its controls from Minecraft.
 
-## Install the MCP server and Skill
+## Requirements
 
-The MCP server requires **Node.js >=22**. The `minecraft-mcp-0.2.1.tgz` package includes the server, its runtime dependencies, Skill and Codex plugin metadata. The Minecraft mod has its own version and remains independently installed.
+The current client mod targets the following versions. Other Minecraft versions and loaders are not yet verified.
 
-### Codex desktop plugin
+| Component | Requirement |
+| --- | --- |
+| Minecraft Java Edition | 26.3 |
+| Mod loader | Fabric Loader 0.19.5 or later |
+| Java | 25 or later |
+| Scripting mod | JsMacros Reloaded 2.2.1 |
+| Agent runtime | Node.js 22 or later, available on `PATH` |
+| Agent application | Codex desktop, or another local MCP client |
+| Recommended mod | Baritone, matching your Minecraft version |
 
-Extract the package into `~/plugins/minecraft-mcp`:
+**Baritone is optional but strongly recommended.** Without it, scripts, screenshots and direct player controls still work; navigation and resource gathering require more scripting. JsMacros Reloaded 2.2.1 bundles the Fabric API modules this mod needs.
+
+## Get started
+
+You need the client mod JAR and the agent plugin archive. The current filenames are `minecraft-mcp-0.2.0.jar` and `minecraft-mcp-0.2.1.tgz`. To produce them from this repository, see [Development](#development).
+
+### 1. Add the mod to Minecraft
+
+1. Open your instance’s game folder in your launcher.
+2. Put the Minecraft MCP JAR in `mods/`, alongside JsMacros and, preferably, Baritone.
+3. Launch Minecraft. Press **F8**, or enter **`/mcp config`** in a world.
+4. Copy the **token** and note the **port**. You will use them to pair the agent with this instance.
+
+The settings screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press **Apply** to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
+
+### 2. Install the Codex plugin
+
+The archive includes the MCP server, its dependencies and the Skill. The commands below use macOS/Linux shell syntax; on Windows, use the equivalent folders under your user profile.
+
+Extract the archive into your personal plugin folder:
 
 ```sh
 mkdir -p ~/plugins/minecraft-mcp
-tar -xzf /absolute/download/minecraft-mcp-0.2.1.tgz -C ~/plugins/minecraft-mcp --strip-components=1
+tar -xzf /path/to/minecraft-mcp-0.2.1.tgz \
+  -C ~/plugins/minecraft-mcp --strip-components=1
 ```
 
-Add the following entry to `plugins` in `~/.agents/plugins/marketplace.json`, preserving existing entries. For a new file, use this complete personal marketplace:
+<details>
+<summary>Register Minecraft MCP in your personal plugin directory</summary>
+
+Create `~/.agents/plugins/marketplace.json` with the following contents. If you already have a marketplace file, add just the Minecraft entry to its `plugins` array and keep its existing name and entries.
 
 ```json
 {
@@ -43,87 +77,160 @@ Add the following entry to `plugins` in `~/.agents/plugins/marketplace.json`, pr
 }
 ```
 
-Create `~/.config/minecraft-mcp/connection.json` with the port and token from the Minecraft mod settings:
+This makes the plugin available in your local directory; it does not publish it. See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins) for other installation options.
 
-```json
-{"port": 28473, "token": "PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS"}
+</details>
+
+Install and enable it:
+
+```sh
+codex plugin add minecraft-mcp@personal
 ```
 
-This file belongs only to the MCP plugin; Minecraft never reads it. Keep it private (`chmod 600` on macOS/Linux). It is outside the installed plugin, so updates and sharing the package do not include or replace credentials. `MINECRAFT_MCP_CONNECTION` can select another settings file; explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` take precedence over file values.
+Use your marketplace’s name instead of `personal` if it differs. You can also install **Minecraft MCP** from that source in the desktop app’s Plugins directory. Reopen the directory or restart the app if the new entry has not appeared.
 
-Run `codex plugin add minecraft-mcp@personal`, then start a new local Codex chat. The plugin appears as **Minecraft MCP** under **Personal** in the Plugins directory. If the directory has not refreshed, reopen it or restart the desktop app. Install from the personal directory in the UI if your Codex version does not provide `plugin add`. See [official plugin packaging](https://developers.openai.com/plugins/build/plugins).
+### 3. Pair the agent with your game
 
-The plugin includes the Skill; do not also install a standalone copy. When migrating from the manual setup below, remove the old `minecraft_mcp` MCP registration and standalone Skill link after verifying the plugin, to avoid duplicate tools and instructions. No Minecraft-side changes are needed.
+Create `~/.config/minecraft-mcp/connection.json` with the values from the Minecraft settings screen:
 
-For an update, replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and use a new chat. Keep connection settings outside the package. This local installation does not publish the plugin to a public directory.
+```json
+{
+  "port": 28473,
+  "token": "PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS"
+}
+```
 
-### Other MCP hosts or manual Codex setup
+On macOS/Linux, restrict access with `chmod 600 ~/.config/minecraft-mcp/connection.json`. This is the **agent’s connection file**. Minecraft manages its own settings through the game UI; the two sides do not share a config file. Keep the token out of the plugin folder so updates and sharing do not include it.
 
-Install the package with npm, or run `npm ci` in a source checkout. It provides a `minecraft-mcp` executable. Register it with your MCP host; the following source-checkout example uses its absolute entrypoint. For Codex:
+Start a **new local Codex chat**, choose Minecraft MCP, and try:
+
+> Inspect my Minecraft client and tell me what you can see.
+
+> Gather some wood nearby and keep me updated in chat.
+
+> Place a visible marker at this location so I can find it again.
+
+The plugin already includes the Skill. If you previously configured Minecraft MCP manually, remove that older MCP registration and standalone Skill copy after confirming the plugin works.
+
+<details>
+<summary>Use another MCP client, or configure Codex manually</summary>
+
+Extract the same archive into a stable folder, or run `npm ci` in a source checkout. Configure your MCP host to start the server with Node:
+
+```json
+{
+  "mcpServers": {
+    "minecraft_mcp": {
+      "command": "node",
+      "args": ["/absolute/path/to/minecraft-mcp/src/server.mjs"],
+      "env": {
+        "MINECRAFT_MCP_PORT": "28473",
+        "MINECRAFT_MCP_TOKEN": "PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS"
+      }
+    }
+  }
+}
+```
+
+Your host may use a different configuration format. For manual Codex setup:
 
 ```sh
 codex mcp add minecraft_mcp \
   --env MINECRAFT_MCP_PORT=28473 \
-  --env MINECRAFT_MCP_TOKEN=PASTE_TOKEN_FROM_MOD_SETTINGS \
-  -- node /absolute/install/minecraft_mcp/src/server.mjs
+  --env MINECRAFT_MCP_TOKEN=PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS \
+  -- node /absolute/path/to/minecraft-mcp/src/server.mjs
 ```
 
-`MINECRAFT_MCP_PORT` defaults to `28473`; `MINECRAFT_MCP_TOKEN` is required. Both belong to the MCP host's settings. The server never reads the mod's config file. Minecraft and MCP currently run on the same machine, but use no shared runtime files. Use separate registrations and ports for multiple instances. The server starts from any working directory. See [Codex MCP configuration](https://developers.openai.com/codex/mcp) for host-specific setup.
+Install `skills/minecraft-mcp` in your agent’s Skill directory as well. For Codex, that is `${CODEX_HOME:-$HOME/.codex}/skills/`. The Skill contains API references, utilities and examples that the agent reads when needed.
 
-Copy `skills/minecraft-mcp` to the agent's skill directory, or link it from a stable checkout:
+</details>
 
-```sh
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-ln -s "$PWD/skills/minecraft-mcp" "${CODEX_HOME:-$HOME/.codex}/skills/minecraft-mcp"
+## Staying in control
+
+| In Minecraft | Action |
+| --- | --- |
+| `/mcp stop` | Disable agent actions, cancel its scripts and release controls |
+| `/mcp start` | Allow agent actions again |
+| `/mcp status` | Show whether control is enabled and how many tasks are active |
+| `/mcp config` or **F8** | Open connection and chat settings |
+
+These are client-side commands. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
+
+The mod adds no blocks, items, entities or world-generation changes. Removing it does not require converting your save. Actions performed by the agent still affect your world and inventory, just as player actions do.
+
+## Connection help
+
+| Symptom | What to check |
+| --- | --- |
+| Connection refused | Launch the correct Minecraft instance and check the port in F8 settings |
+| Authentication failed | Copy the same token into the agent’s connection settings, then restart its MCP connection |
+| Agent control disabled | Enter `/mcp start` when you want the agent to resume |
+| Plugin or tools missing | Confirm the plugin is enabled, Node.js is installed, and open a new local chat |
+| Port already in use | Give each simultaneously running instance a different port |
+| Incompatible protocol | Update the mod and MCP plugin to compatible versions |
+
+The desktop plugin reads `~/.config/minecraft-mcp/connection.json`. Set `MINECRAFT_MCP_CONNECTION` to use a different file. Explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` values override the file’s values; the standalone server uses these environment variables directly.
+
+Minecraft and the MCP server must run on the same computer. The mod listens only on `127.0.0.1` and requires its token. Scripts run with the Minecraft process’s permissions, so connect agents you trust.
+
+## Updating
+
+- **Minecraft mod:** close Minecraft and replace the JAR in `mods/`.
+- **Agent plugin:** replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
+- **Manual MCP setup:** update the installed package and restart the MCP process.
+
+Your Minecraft settings and agent connection file stay outside the installed packages. The mod and plugin have separate version numbers; they communicate using a versioned protocol.
+
+<details>
+<summary>Migrating from the older JsMacros bootstrap installation</summary>
+
+Stop and remove the `minecraft_mcp` JsMacros service and its bootstrap/helper JAR. Install the client mod and follow the pairing instructions above. Replace the old `MINECRAFT_MCP_CONFIG` setting with the new agent-side configuration. Other JsMacros scripts and services can stay as they are.
+
+</details>
+
+## Development
+
+The repository contains one agent plugin and its companion Minecraft mod:
+
+```text
+.codex-plugin/         Codex plugin metadata
+.mcp.json             Bundled MCP server launch configuration
+src/                  Node.js MCP server and plugin entrypoint
+skills/minecraft-mcp/ Agent instructions, API references, scripts and examples
+mod/                  Fabric client mod
+assets/               Plugin icon
+scripts/              Developer utilities
+tests/                MCP protocol and real-client integration checks
 ```
 
-The Skill teaches the workflows and loads API references only when needed. Keep task scripts, notes and outputs in a separate workspace; copy examples there before editing them.
+The plugin metadata, Skill and MCP launch configuration sit at the plugin root. `src/` contains the MCP implementation; `mod/` contains the game integration. Keep gameplay scripts, notes and captures in a separate task workspace.
 
-## Controls and updates
-
-- `/mcp start`: enable agent actions.
-- `/mcp stop`: disable actions, cancel owned scripts and release controls.
-- `/mcp status`: report control state and active tasks.
-- `/mcp config` or F8: settings, pairing token and chat appearance.
-
-Commands are client-side. MCP `stop` cancels work without disabling the connection. Screenshots remain available while agent control is disabled. Leaving or changing worlds cancels old tasks without changing the player's enable/disable choice.
-
-Chat defaults to aqua `[AGENT]` and white message text. The settings screen controls the tag, optional name and their colors. Messages display locally and are not sent to a multiplayer server.
-
-Update the mod by replacing its JAR while Minecraft is closed. Update the MCP server/Skill separately and restart that MCP process. Settings persist on their respective sides. A protocol handshake rejects incompatible versions before sending actions; matching protocol versions can update independently.
-
-For migration from the old bootstrap version: stop and remove the `minecraft_mcp` JsMacros service, then remove its old bootstrap/helper JAR. Install the mod and configure its token/port through the UI. Replace the old `MINECRAFT_MCP_CONFIG` environment setting with the separate port/token settings above. Other JsMacros scripts and services need no changes.
-
-## Architecture
-
-Agent fs/shell → task workspace and scripts.
-Agent MCP → Node MCP SDK (stdio) → authenticated loopback HTTP → client mod → native JsMacros contexts and installed mod APIs.
-
-The mod owns the HTTP listener, UI, chat commands and lifecycle. HTTP workers enqueue requests; a native client-tick callback dispatches short operations and starts scripts through JsMacros's `Core.exec`. There is no second script scheduler or external bootstrap/service to install. Baritone and other installed mods remain ordinary Java APIs, discovered through metadata and public signatures. The only Baritone-specific runtime code cancels autonomous movement on player takeover; the mod starts and runs without it.
-
-Each `execute` gets a fresh GraalJS context. Output is a bounded in-memory, single-consumer stream, read through `read_output` without filesystem roundtrips. Overflow reports `dropped_chars`. The bridge retains at most 128 task records and 64 queued requests; preserve durable results in the task workspace. `active` describes native callback lifetime, not gameplay progress. Script completion does not prove an autonomous mod finished.
-
-`mcp.mainThread(fn)` yields the JS context while waiting for a short native game-thread callback, returning its result and propagating errors. Keep waits and long work outside that callback. `mcp.track(registrable)` registers drawings/commands for cleanup. Stop closes MCP-owned contexts and releases scripted keys without closing unrelated JsMacros scripts.
-
-Screenshots use the real framebuffer and return PNG data over the connection. Temporary encoding files are deleted by the mod; the MCP server returns image content directly. It never reads a client-provided screenshot path. Script files are read by MCP and their source is sent over the connection.
-
-The listener binds only `127.0.0.1` and authenticates with the mod's token. Java scripting has the client's OS privileges. An uncertain timeout does not undo a dispatched action; inspect game state before retrying mutations.
-
-## Build and test
-
-Build the mod using JDK 25:
+Build the Minecraft mod with JDK 25:
 
 ```sh
 ./gradlew build
 ```
 
-On Windows use `gradlew.bat build`. The installable mod JAR is in `build/libs/` (not the `-sources.jar`). The build resolves official Minecraft/Fabric dependencies and JsMacros; it does not package a launcher instance or authentication token. Run `npm ci`, then `npm pack --pack-destination /chosen/output` to package the MCP server, runtime dependencies, Skill and plugin metadata separately. No build of the Minecraft mod is needed for plugin-only changes.
+On Windows, use `gradlew.bat build`. Install the JAR from `build/libs/`, excluding the `-sources.jar`.
 
-- `npm test`: official MCP SDK negotiation, tool schemas and missing-token handling; no game required.
-- `npm run test:runtime`: real-client thread handoffs, callback errors, mod discovery, APIs and screenshots. Set the MCP port/token environment variables and run while agents are idle.
-- `npm run test:mod`: real settings UI token rotation/restoration and HTTP authentication/protocol checks. Requires a disposable client and the MCP port/token.
-- `npm run test:live`: real-client navigation, output, cancellation, keys, overlays, commands, chat and screenshots. Requires Baritone and a disposable world; it moves the player and exercises stop/start.
+Package the agent plugin with Node.js 22 or later:
 
-No mocked clients are used. `./gradlew runClient -PmcpRunDir=/absolute/test-instance` launches a separate development client; its default directory is in the OS temporary directory. Test results go to the runner, not a repository working-data directory.
+```sh
+npm ci
+mkdir -p build/distributions
+npm pack --pack-destination build/distributions
+```
 
-[Agent Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Mod discovery](skills/minecraft-mcp/references/mods.md) · [Utilities](skills/minecraft-mcp/scripts) · [Examples](skills/minecraft-mcp/examples)
+The archive contains the server, runtime dependencies, Skill and plugin metadata. It does not contain Minecraft, a launcher instance or pairing credentials.
+
+`npm test` checks the real stdio server through the official MCP SDK. These additional checks require a running disposable Minecraft client and the MCP port/token environment variables:
+
+- `npm run test:runtime`: script execution, game-thread callbacks, mod discovery and screenshots.
+- `npm run test:mod`: settings UI, token rotation and authentication.
+- `npm run test:live`: movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
+
+No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcpRunDir=/absolute/test-instance`; the default run directory is in the OS temporary folder.
+
+The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`. Each execution gets a fresh JsMacros context; running scripts can continue and produce incremental output, but top-level variables are not shared between calls.
+
+[Agent Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Mod discovery](skills/minecraft-mcp/references/mods.md) · [Script utilities](skills/minecraft-mcp/scripts) · [Examples](skills/minecraft-mcp/examples)

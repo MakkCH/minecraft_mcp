@@ -1,7 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Minecraft MCP</title>
   <rect width="128" height="128" rx="28" fill="#182B25"/>
-  <path d="M64 18 106 42 64 66 22 42Z" fill="#7BD06B"/>
-  <path d="M22 42 64 66 64 112 22 88Z" fill="#438C43"/>
-  <path d="M64 66 106 42 106 88 64 112Z" fill="#2D663A"/>
-  <path d="m35 63 11 12-11 5m15 7 9 5" fill="none" stroke="#F1F8EE" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M64 16 105.57 40 64 64 22.43 40Z" fill="#7BD06B"/>
+  <path d="M22.43 40 64 64 64 112 22.43 88Z" fill="#438C43"/>
+  <path d="M64 64 105.57 40 105.57 88 64 112Z" fill="#2D663A"/>
+  <!-- Project a centered terminal prompt onto the cube's 48 × 48 left face. -->
+  <g transform="matrix(.8660254 .5 0 1 22.43 40)">
+    <path d="M10 14 19 23 10 32 M27 32H37" fill="none" stroke="#F1F8EE" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+  </g>
 </svg>
