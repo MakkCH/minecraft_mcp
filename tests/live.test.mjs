@@ -5,10 +5,9 @@ import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
-import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:process.env.MINECRAFT_MCP_CONFIG ? {MINECRAFT_MCP_CONFIG:process.env.MINECRAFT_MCP_CONFIG} : {},stderr:'pipe'});
+const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:Object.fromEntries(['MINECRAFT_MCP_PORT','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
 const client = new Client({name:'minecraft-mcp-live-check',version:'1.0.0'});
 async function call(name,args={}) {
   const r = await client.callTool({name,arguments:args});
@@ -85,7 +84,5 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     const image=capture.content.find(c=>c.type==='image');
     assert.ok(image); const png=Buffer.from(image.data,'base64');
     assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
-    const saved=JSON.parse(capture.content.find(c=>c.type==='text').text).path;
-    assert.deepEqual(await readFile(saved),png);
   } finally { await client.close(); }
 });

@@ -1,80 +1,87 @@
 # minecraft_mcp
 
-A Skill and MCP server for controlling a Minecraft Java Edition client through JsMacros. Agents use five tools—execute, incremental output, stop, screenshot and local chat—alongside their normal filesystem and shell. The player watches the actual client and can take over with `/mcp stop`.
+A client mod, MCP server and Agent Skill for controlling Minecraft through JsMacros. The player watches the actual client, can interact normally and can take over with `/mcp stop`. Agents use five tools—execute, incremental output, stop, screenshot and local chat—alongside their normal filesystem and shell.
 
-The integration targets the configured instance, independently of its launcher, world, server or modpack. Installed mods are discovered through metadata and called through their Java APIs. Baritone is optional; its navigation, mining and building APIs remain directly available when installed.
+The Minecraft mod and MCP server are installed, configured and updated independently. They communicate over an authenticated loopback connection; they do not share a config file or screenshot directory.
 
-## Requirements
+## Install the Minecraft mod
 
-- A Minecraft Java Edition instance with a compatible JsMacros installation and JavaScript support.
-- Node.js >=22 for the MCP server; JDK >=21 to build the bridge. Minecraft may require a newer Java runtime.
-- The MCP process and Minecraft must run on the same machine and have access to the script and screenshot files.
+1. Use a compatible **Minecraft Java Edition / Fabric** instance with **JsMacros Reloaded**. **Baritone is strongly recommended** for navigation, mining and building, but is not required to start the mod or execute scripts.
+2. Put `minecraft-mcp-0.2.0.jar` in the instance's `mods/` folder and launch Minecraft. This build targets **Minecraft 26.3, Java 25, Fabric Loader >=0.19.5 and JsMacros Reloaded 2.2.1**. The required Fabric lifecycle/command/key-mapping modules are also bundled by that JsMacros release.
+3. Press **F8** (rebindable in Controls) or enter **`/mcp config`** to open the mod settings.
+4. Choose a port, copy or set a token, and configure automatic startup and chat appearance. Apply saves the settings and stops current agent tasks. Different simultaneously running instances need different ports.
 
-The current compatibility baseline is Minecraft 26.3, Fabric 0.19.5 and JsMacros Reloaded 2.2.1. The bundled API index describes that version; check installed versions when using another instance. Mod dependencies must match that instance's Minecraft version and loader.
+The mod manages its own `config/minecraft_mcp.json`; users do not need to edit it. Tokens are hidden in the UI until explicitly shown, and can be copied or regenerated. Keep the same token in the separate MCP setup below. A port conflict or invalid settings is shown in the UI, without crashing Minecraft.
 
-## Install into an instance
+The mod adds its own settings and a key binding. It does not install other mods, change world generation or add blocks/items/entities. Agent gameplay can of course change the world and inventory. Removing the mod disables the integration without requiring save conversion.
 
-Build from this checkout:
+## Install the MCP server and Skill
 
-```sh
-npm ci
-npm run build
-```
-
-1. Locate the target instance's game directory using its launcher.
-2. Copy `dist/bootstrap.js`, `dist/minecraft-mcp-bridge.jar` and `client/config.example.json` into its `config/jsMacros/Macros/minecraft_mcp/` directory, naming the config `config.json`.
-3. Replace the token placeholder with a random secret (at least 32 characters). Choose a free loopback port; simultaneously running instances need different ports. Keep the config private.
-4. Register `minecraft_mcp/bootstrap.js` as an enabled JsMacros service named `minecraft_mcp`.
-5. Point the MCP server at that instance's config:
+The MCP server requires **Node.js >=22**. Install the separately packaged `minecraft-mcp-0.2.0.tgz` with npm, or run `npm ci` in a source checkout. The package provides a `minecraft-mcp` executable. Register it with your MCP host; the following source-checkout example uses its absolute entrypoint. For Codex:
 
 ```sh
-codex mcp add minecraft_mcp --env MINECRAFT_MCP_CONFIG=/absolute/instance/config/jsMacros/Macros/minecraft_mcp/config.json -- node /absolute/install/minecraft_mcp/src/server.mjs
+codex mcp add minecraft_mcp \
+  --env MINECRAFT_MCP_PORT=28473 \
+  --env MINECRAFT_MCP_TOKEN=PASTE_TOKEN_FROM_MOD_SETTINGS \
+  -- node /absolute/install/minecraft_mcp/src/server.mjs
 ```
 
-`MINECRAFT_MCP_CONFIG` is required for client operations. There is no implicit instance or config in the repository. Use separate MCP registrations with separate configs to connect to multiple instances. The server can start from any working directory.
+`MINECRAFT_MCP_PORT` defaults to `28473`; `MINECRAFT_MCP_TOKEN` is required. Both belong to the MCP host's settings. The server never reads the mod's config file. Minecraft and MCP currently run on the same machine, but use no shared runtime files. Use separate registrations and ports for multiple instances. The server starts from any working directory. See [Codex MCP configuration](https://developers.openai.com/codex/mcp) for host-specific setup.
 
-Install the companion Skill by copying `skills/minecraft-mcp` to the agent's skill directory, or link it from a stable checkout:
+Copy `skills/minecraft-mcp` to the agent's skill directory, or link it from a stable checkout:
 
 ```sh
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 ln -s "$PWD/skills/minecraft-mcp" "${CODEX_HOME:-$HOME/.codex}/skills/minecraft-mcp"
 ```
 
-Invoke `$minecraft-mcp`, or allow automatic skill selection. The Skill teaches workflows and loads API references only when needed.
+The Skill teaches the workflows and loads API references only when needed. Keep task scripts, notes and outputs in a separate workspace; copy examples there before editing them.
 
-For updates, `node scripts/deploy-client.mjs /absolute/instance` copies the built bridge and bootstrap into an existing instance, preserving its config. Reload the JsMacros service after updating, when no agent task is running.
+## Controls and updates
 
-An optional pinned starter pack can be built with `python3 scripts/prepare_pack.py --output /chosen/path/minecraft_mcp.mrpack`. It packages Minecraft 26.3/Fabric with JsMacros, Fabric API and Baritone for import by compatible launchers. Downloads are cached in the OS temporary directory (override with `--cache-dir`); each pack gets a new secret. The resulting pack is private and contains its own instance config. Manual installation does not require this pack.
+- `/mcp start`: enable agent actions.
+- `/mcp stop`: disable actions, cancel owned scripts and release controls.
+- `/mcp status`: report control state and active tasks.
+- `/mcp config` or F8: settings, pairing token and chat appearance.
 
-## Working files and controls
+Commands are client-side. MCP `stop` cancels work without disabling the connection. Screenshots remain available while agent control is disabled. Leaving or changing worlds cancels old tasks without changing the player's enable/disable choice.
 
-Keep agent scripts, notes and task outputs in a separate task workspace. This repository contains the implementation; the installed Skill contains reusable utilities and reference examples. Neither is the agent's working directory. Copy examples into the task workspace before adapting them, and pass absolute file paths to `execute`. Screenshots are saved in the target instance's `config/jsMacros/Macros/minecraft_mcp/captures/screenshots/` directory and returned directly as MCP images.
+Chat defaults to aqua `[AGENT]` and white message text. The settings screen controls the tag, optional name and their colors. Messages display locally and are not sent to a multiplayer server.
 
-`/mcp status` reports control state. `/mcp stop` disables further agent actions and relinquishes control; `/mcp start` enables them again. These are client-side commands. The bootstrap starts with the client; disconnect cancels old tasks and releases controls without changing the enable flag. MCP `stop` cancels tasks without disabling the bridge.
+Update the mod by replacing its JAR while Minecraft is closed. Update the MCP server/Skill separately and restart that MCP process. Settings persist on their respective sides. A protocol handshake rejects incompatible versions before sending actions; matching protocol versions can update independently.
 
-Chat defaults to aqua `[AGENT]` and white message text. Configure `chat.tag`, `tagColor`, optional `name`, `nameColor` and `messageColor` in the instance config, then reload the service. Messages display locally and are not sent to the server.
-
-The bridge binds only `127.0.0.1` and authenticates with the instance secret. Java scripting runs with the client's OS privileges; this is a trusted scripting interface.
+For migration from the old bootstrap version: stop and remove the `minecraft_mcp` JsMacros service, then remove its old bootstrap/helper JAR. Install the mod and configure its token/port through the UI. Replace the old `MINECRAFT_MCP_CONFIG` environment setting with the separate port/token settings above. Other JsMacros scripts and services need no changes.
 
 ## Architecture
 
 Agent fs/shell → task workspace and scripts.
-Agent MCP → Node MCP SDK (stdio) → authenticated loopback HTTP → JDK bridge → bootstrap → native JsMacros contexts and installed mod APIs.
+Agent MCP → Node MCP SDK (stdio) → authenticated loopback HTTP → client mod → native JsMacros contexts and installed mod APIs.
 
-HTTP workers enqueue requests; a JsMacros Tick listener dispatches them into native script contexts. The Java bridge has no Minecraft dependency and does not replace JsMacros task management. Output uses bounded in-memory buffers, with no filesystem roundtrip. Each `execute` gets a fresh context. Callbacks may retain that context; `active` is not proof an action is still progressing, and script completion is not proof an autonomous mod finished.
+The mod owns the HTTP listener, UI, chat commands and lifecycle. HTTP workers enqueue requests; a native client-tick callback dispatches short operations and starts scripts through JsMacros's `Core.exec`. There is no second script scheduler or external bootstrap/service to install. Baritone and other installed mods remain ordinary Java APIs, discovered through metadata and public signatures. The only Baritone-specific runtime code cancels autonomous movement on player takeover; the mod starts and runs without it.
 
-`read_output` consumes newly buffered output for a single reader. Overflow reports `dropped_chars`; output is not durable replay. The bridge retains at most 128 task records and 64 queued requests, evicting finished records when needed. Preserve important results in the task workspace. An uncertain transport timeout does not undo an already dispatched action; inspect state before repeating mutations.
+Each `execute` gets a fresh GraalJS context. Output is a bounded in-memory, single-consumer stream, read through `read_output` without filesystem roundtrips. Overflow reports `dropped_chars`. The bridge retains at most 128 task records and 64 queued requests; preserve durable results in the task workspace. `active` describes native callback lifetime, not gameplay progress. Script completion does not prove an autonomous mod finished.
 
-`mcp.mainThread(fn)` yields the GraalJS context while waiting for a short native game-thread callback, returns its value and propagates errors. Keep tick waits, I/O and long work outside it. The native fire-and-forget overload can cause a watchdog timeout if the originating script retains the same context lock. Later native callback errors may go to the game log; catch and print them when task output is needed.
+`mcp.mainThread(fn)` yields the JS context while waiting for a short native game-thread callback, returning its result and propagating errors. Keep waits and long work outside that callback. `mcp.track(registrable)` registers drawings/commands for cleanup. Stop closes MCP-owned contexts and releases scripted keys without closing unrelated JsMacros scripts.
 
-`mcp.track(registrable)` registers drawings/commands for cleanup. Stop closes MCP-owned contexts and releases scripted keys. If Baritone is installed, stop also cancels its process because it can outlive the initiating script. This optional takeover cleanup is the only mod-specific runtime behavior; other mods use their own documented cleanup APIs. Other manually started JsMacros contexts are not closed.
+Screenshots use the real framebuffer and return PNG data over the connection. Temporary encoding files are deleted by the mod; the MCP server returns image content directly. It never reads a client-provided screenshot path. Script files are read by MCP and their source is sent over the connection.
 
-## Development checks
+The listener binds only `127.0.0.1` and authenticates with the mod's token. Java scripting has the client's OS privileges. An uncertain timeout does not undo a dispatched action; inspect game state before retrying mutations.
 
-- `npm test`: official MCP SDK negotiation and schema/config validation against the real stdio server; no game required.
-- `npm run test:runtime`: real-client thread handoffs, callback errors, mod discovery, API access and screenshots. Set `MINECRAFT_MCP_CONFIG`; run while other agents are idle because task cleanup releases shared controls.
-- `npm run test:live`: real-client execution, output, cancellation, key release, Baritone navigation, overlays, commands, chat and screenshots. Requires the config, Baritone and a disposable world; it moves the player and exercises stop/start.
+## Build and test
 
-No mocks or fake clients are used. Live tests fail when the configured instance is unavailable. Results go to the test runner; tests do not save copies of screenshots or logs in the repository. These checks do not establish compatibility with every Minecraft/mod version or measure combat performance.
+Build the mod using JDK 25:
+
+```sh
+./gradlew build
+```
+
+On Windows use `gradlew.bat build`. The installable mod JAR is in `build/libs/` (not the `-sources.jar`). The build resolves official Minecraft/Fabric dependencies and JsMacros; it does not package a launcher instance or authentication token. `npm pack --pack-destination /chosen/output` packages the MCP server and Skill separately.
+
+- `npm test`: official MCP SDK negotiation, tool schemas and missing-token handling; no game required.
+- `npm run test:runtime`: real-client thread handoffs, callback errors, mod discovery, APIs and screenshots. Set the MCP port/token environment variables and run while agents are idle.
+- `npm run test:mod`: real settings UI token rotation/restoration and HTTP authentication/protocol checks. Requires a disposable client and the MCP port/token.
+- `npm run test:live`: real-client navigation, output, cancellation, keys, overlays, commands, chat and screenshots. Requires Baritone and a disposable world; it moves the player and exercises stop/start.
+
+No mocked clients are used. `./gradlew runClient -PmcpRunDir=/absolute/test-instance` launches a separate development client; its default directory is in the OS temporary directory. Test results go to the runner, not a repository working-data directory.
 
 [Agent Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Mod discovery](skills/minecraft-mcp/references/mods.md) · [Utilities](skills/minecraft-mcp/scripts) · [Examples](skills/minecraft-mcp/examples)

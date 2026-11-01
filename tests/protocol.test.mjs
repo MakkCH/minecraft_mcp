@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 
 test('real MCP SDK negotiates stdio and validates published tool schemas', async () => {
-  const transport = new StdioClientTransport({command:process.execPath, args:[fileURLToPath(new URL('../src/server.mjs', import.meta.url))], cwd:tmpdir(), env:{MINECRAFT_MCP_CONFIG:''}, stderr:'pipe'});
+  const transport = new StdioClientTransport({command:process.execPath, args:[fileURLToPath(new URL('../src/server.mjs', import.meta.url))], cwd:tmpdir(), env:{MINECRAFT_MCP_TOKEN:''}, stderr:'pipe'});
   const client = new Client({name:'minecraft-mcp-protocol-check',version:'1.0.0'});
   try {
     await client.connect(transport);
@@ -19,6 +19,6 @@ test('real MCP SDK negotiates stdio and validates published tool schemas', async
     // A caller without an instance must not silently reach a developer's config.
     const unconfigured = await client.callTool({name:'execute',arguments:{code:'console.log(1)'}});
     assert.equal(unconfigured.isError,true);
-    assert.match(unconfigured.content[0].text,/Set MINECRAFT_MCP_CONFIG/);
+    assert.match(unconfigured.content[0].text,/Set MINECRAFT_MCP_TOKEN/);
   } finally { await client.close(); }
 });

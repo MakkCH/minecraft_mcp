@@ -15,7 +15,7 @@ public final class Bridge implements AutoCloseable {
     private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
     private final BlockingQueue<Request> requests = new ArrayBlockingQueue<>(64);
     private final Map<String, Job> jobs = new LinkedHashMap<>();
-    private final byte[] token;
+    private volatile byte[] token;
     private volatile boolean enabled;
     private final int outputLimit;
 
@@ -28,6 +28,10 @@ public final class Bridge implements AutoCloseable {
         server.setExecutor(workers);
         server.createContext("/", this::handle);
         server.start();
+    }
+    public void setToken(String value) {
+        if (value.length() < 32) throw new IllegalArgumentException("Token must have at least 32 characters");
+        token = ("Bearer " + value).getBytes(StandardCharsets.UTF_8);
     }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean value) { enabled = value; }
@@ -53,6 +57,12 @@ public final class Bridge implements AutoCloseable {
             if (!MessageDigest.isEqual(token, supplied)) { send(x, 401, "{\"error\":\"Unauthorized\"}"); return; }
             if (x.getRequestHeaders().containsKey("Origin")) { send(x, 403, "{\"error\":\"Browser requests are not accepted\"}"); return; }
             String path = x.getRequestURI().getPath();
+            if (path.equals("/status") && x.getRequestMethod().equals("GET")) {
+                send(x, 200, "{\"protocol\":1,\"enabled\":" + enabled + "}"); return;
+            }
+            if (!"1".equals(x.getRequestHeaders().getFirst("X-Minecraft-Mcp-Protocol"))) {
+                send(x, 426, "{\"error\":\"Incompatible MCP protocol; update the MCP server\"}"); return;
+            }
             if (path.equals("/output") && x.getRequestMethod().equals("GET")) {
                 Map<String,String> q = query(x.getRequestURI().getRawQuery());
                 Job job = getJob(q.get("task"));
@@ -67,7 +77,7 @@ public final class Bridge implements AutoCloseable {
                 try { send(x, 200, r.reply.get(15, TimeUnit.SECONDS)); }
                 catch (TimeoutException e) {
                     r.reply.cancel(false); requests.remove(r);
-                    send(x, 504, "{\"error\":\"Minecraft did not respond. Check bootstrap.js and the client. A dispatched action may still have executed; do not blindly retry.\"}");
+                    send(x, 504, "{\"error\":\"Minecraft did not respond. Check the Minecraft MCP mod settings. A dispatched action may still have executed; do not blindly retry.\"}");
                 }
             } else send(x, 404, "{\"error\":\"Unknown endpoint\"}");
         } catch (Exception e) { send(x, 500, "{\"error\":" + quote(e.toString()) + "}"); }

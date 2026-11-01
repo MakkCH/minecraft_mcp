@@ -1,20 +1,28 @@
 {
   "name": "minecraft-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "files": [
+    "src",
+    "skills",
+    "README.md"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "start": "node src/server.mjs",
-    "build": "node scripts/build.mjs",
     "test": "node --test tests/protocol.test.mjs",
     "test:runtime": "node --test tests/runtime.test.mjs",
+    "test:mod": "node --test tests/mod.test.mjs",
     "test:live": "node --test tests/live.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"
+  },
+  "bin": {
+    "minecraft-mcp": "src/server.mjs"
   }
 }

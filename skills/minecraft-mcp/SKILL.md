@@ -16,7 +16,7 @@ const p = Player.getPlayer();
 console.log(p ? {x:p.getX(), y:p.getY(), z:p.getZ()} : 'No world loaded');
 ```
 
-Use `screenshot` when the view matters. It returns an image directly and an absolute PNG path for local inspection; do not dump base64 or emit the same image again. Use the configured Minecraft instance and its installed capabilities; do not assume a particular launcher, world, server or modpack. If the bridge is unavailable, report the connection error and check the instance and `/mcp status`; do not assume the game action succeeded.
+Use `screenshot` when the view matters. It returns the image directly over the connection; do not dump base64 or emit the same image again. Use the configured Minecraft instance and its installed capabilities; do not assume a particular launcher, world, server or modpack. If the bridge is unavailable, report the connection error and check the mod settings (F8 or `/mcp config`), MCP port/token and `/mcp status`; do not assume the game action succeeded.
 
 ## Execute, observe, stop
 

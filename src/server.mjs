@@ -7,16 +7,26 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const configPath = process.env.MINECRAFT_MCP_CONFIG;
-const server = new McpServer({name:'minecraft_mcp', version:'0.1.0'}, {
+const port = Number(process.env.MINECRAFT_MCP_PORT || 28473);
+const token = process.env.MINECRAFT_MCP_TOKEN;
+let connected = false;
+const server = new McpServer({name:'minecraft_mcp', version:'0.2.0'}, {
   instructions: `Controls the player's real Minecraft client. Follow the minecraft-mcp skill at ${root}/skills/minecraft-mcp/SKILL.md for workflows and API lookup. Player /mcp stop takes priority.`
 });
 async function request(path, body) {
-  if (!configPath) throw new Error('Set MINECRAFT_MCP_CONFIG to the target instance config.json');
-  const cfg = JSON.parse(await readFile(configPath, 'utf8'));
-  if (!Number.isInteger(cfg.port) || cfg.port < 1024 || cfg.port > 65535) throw new Error('Invalid bridge port');
-  const response = await fetch(`http://127.0.0.1:${cfg.port}${path}`, {
-    method: body ? 'POST' : 'GET', headers: {Authorization:`Bearer ${cfg.token}`, 'Content-Type':'application/json'},
+  if (!token) throw new Error('Set MINECRAFT_MCP_TOKEN to the token shown in the mod settings');
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid MINECRAFT_MCP_PORT');
+  if (!connected) {
+    const probe = await fetch(`http://127.0.0.1:${port}/status`, {
+      headers:{Authorization:`Bearer ${token}`}, signal:AbortSignal.timeout(5000)
+    });
+    const info = await probe.json();
+    if (!probe.ok) throw new Error(info.error || `HTTP ${probe.status}`);
+    if (info.protocol !== 1) throw new Error('Incompatible Minecraft MCP mod protocol; update the mod and MCP server');
+    connected = true;
+  }
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, {
+    method: body ? 'POST' : 'GET', headers: {Authorization:`Bearer ${token}`, 'Content-Type':'application/json', 'X-Minecraft-Mcp-Protocol':'1'},
     ...(body ? {body:JSON.stringify(body)} : {}), signal:AbortSignal.timeout(20000)
   });
   const result = await response.json();
@@ -26,7 +36,7 @@ async function request(path, body) {
 const text = result => ({content:[{type:'text', text:JSON.stringify(result)}]});
 const safe = fn => async args => {
   try { return await fn(args); }
-  catch (error) { return {isError:true, content:[{type:'text', text:`${error.message}${error.cause ? ': '+error.cause.message : ''}. Check Minecraft and /mcp status. Config: ${configPath || '(not configured)'}`} ]}; }
+  catch (error) { return {isError:true, content:[{type:'text', text:`${error.message}${error.cause ? ': '+error.cause.message : ''}. Check the mod settings, MCP port/token and /mcp status.`} ]}; }
 };
 server.registerTool('execute', {
   description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Returns early with task ID when still running; use read_output. This is GraalJS, not Node.js.',
@@ -46,11 +56,11 @@ server.registerTool('stop', {
   inputSchema:{task:z.string().optional()}
 }, safe(async ({task}) => text(await request('/command', {op:'stop',task}))));
 server.registerTool('screenshot', {
-  description:'Capture the actual Minecraft framebuffer including HUD, menus and overlays. Returns the image directly and its absolute local path.', inputSchema:{}
+  description:'Capture the actual Minecraft framebuffer including HUD, menus and overlays. Returns the image directly; no shared screenshot directory is needed.', inputSchema:{}
 }, safe(async () => {
   const result = await request('/command', {op:'screenshot'});
-  const image = await readFile(result.path);
-  return {content:[{type:'image', mimeType:'image/png', data:image.toString('base64')}, {type:'text',text:JSON.stringify(result)}]};
+  if (result.mimeType !== 'image/png' || typeof result.data !== 'string') throw new Error('Invalid screenshot response');
+  return {content:[{type:'image', mimeType:result.mimeType, data:result.data}]};
 }));
 server.registerTool('chat', {
   description:'Display a progress message in the player’s local Minecraft chat as [AGENT] message. Tag, optional name, and colors come from config. Does NOT send server chat or execute chat commands.',
