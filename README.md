@@ -198,7 +198,7 @@ The repository contains one agent plugin and its companion Minecraft mod:
 src/                  Node.js MCP server and plugin entrypoint
 skills/minecraft-mcp/ Agent instructions, API references, scripts and examples
 mod/                  Fabric client mod
-assets/               Plugin icon
+assets/               SVG icon source and PNG used by the mod and plugin
 scripts/              Developer utilities
 tests/                MCP protocol and real-client integration checks
 ```
@@ -223,6 +223,8 @@ npm pack --pack-destination build/distributions
 
 The archive contains the server, runtime dependencies, Skill and plugin metadata. It does not contain Minecraft, a launcher instance or pairing credentials.
 
+The editable icon source is `assets/icon.svg`. Both the mod and plugin use its transparent 512 × 512 export, `assets/icon.png`; Gradle copies the PNG to the mod's resource path when building. When changing the SVG, refresh the PNG with an SVG renderer such as resvg and check that the terminal symbol and transparency are preserved.
+
 `npm test` checks the real stdio server through the official MCP SDK. These additional checks require a running disposable Minecraft client and the MCP port/token environment variables:
 
 - `npm run test:runtime`: script execution, game-thread callbacks, mod discovery and screenshots.
@@ -234,3 +236,7 @@ No mocked game clients are used. Launch a separate development client with `./gr
 The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`. Each execution gets a fresh JsMacros context; running scripts can continue and produce incremental output, but top-level variables are not shared between calls.
 
 [Agent Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Mod discovery](skills/minecraft-mcp/references/mods.md) · [Script utilities](skills/minecraft-mcp/scripts) · [Examples](skills/minecraft-mcp/examples)
+
+## License
+
+[MIT](LICENSE) © 2026 [Mak](https://github.com/MakkCH). Bundled third-party dependencies retain their own licenses.
