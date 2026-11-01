@@ -7,6 +7,8 @@ description: Control and inspect the player's real Minecraft client through the 
 
 Use the `minecraft_mcp` server's five tools. Use a task workspace outside this repository and the installed Skill for code, durable notes and outputs. Use ordinary filesystem/shell tools, and copy examples there before editing them. Do not build another shell or filesystem protocol inside Minecraft.
 
+Use English for agent-authored in-game chat, marker labels and script diagnostics.
+
 ## Start with observation
 
 Read the player's current state before acting. For example, call `execute` with:
@@ -23,7 +25,7 @@ Use `screenshot` when the view matters. It returns the image directly over the c
 - `execute`: provide exactly one of `code` or an absolute local `file`. Write substantial scripts with normal file tools, then execute the file. `wait_ms` defaults to 1000 and is capped at 10000. Output may arrive before completion; keep the returned task ID.
 - `read_output`: pass the task ID and optionally `wait_ms` up to 10000. This consumes only new output from an in-memory buffer; no file roundtrip is needed. Assign one reader per task. Inspect `dropped_chars` for overflow; don't treat truncated output as complete evidence.
 - `stop`: omit `task` to stop all MCP-owned scripts, or specify one. Either form also cancels Baritone and releases scripted keys because they share one player. Stop ongoing control when the human takes over.
-- `chat`: pass message text without the tag, e.g. `我已經收集了木材，下一步製作工具。` The configured colored `[AGENT]` tag and optional name are added automatically. This displays locally; it does not send multiplayer messages. Report useful milestones, not every poll.
+- `chat`: pass message text without the tag, e.g. `I have collected wood. Next, I will craft tools.` The configured colored `[AGENT]` tag and optional name are added automatically. This displays locally; it does not send multiplayer messages. Report useful milestones, not every poll.
 
 Check result state and errors: `running` means script execution, `active` means native callbacks keep its context open, and `completed`, `stopped`, `error` are terminal. `active` does not prove movement; `completed` does not prove Baritone reached a goal. Verify the actual requested outcome with game state or screenshots. After an uncertain transport timeout, inspect before repeating a mutating action.
 

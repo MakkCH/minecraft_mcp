@@ -63,7 +63,7 @@ server.registerTool('screenshot', {
   return {content:[{type:'image', mimeType:result.mimeType, data:result.data}]};
 }));
 server.registerTool('chat', {
-  description:'Display a progress message in the player’s local Minecraft chat as [AGENT] message. Tag, optional name, and colors come from config. Does NOT send server chat or execute chat commands.',
+  description:'Display a progress message in English in the player’s local Minecraft chat as [AGENT] message. Tag, optional name, and colors come from config. Does NOT send server chat or execute chat commands.',
   inputSchema:{message:z.string().min(1).max(2000)}
 }, safe(async ({message}) => text(await request('/command', {op:'chat',message}))));
 await server.connect(new StdioServerTransport());

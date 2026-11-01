@@ -76,7 +76,7 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     await delay(3500);
     const resumed=await collect(await json('execute',{code:'console.log("RESUMED");'}));
     assert.match(resumed.output,/RESUMED/);
-    await call('chat',{message:'已完成客戶端連線與輸出測試，下一步確認畫面與 Baritone。'});
+    await call('chat',{message:'Client connection and output checks passed. Next, I will check the game view and Baritone.'});
     const chatText=await collect(await json('execute',{code:'console.log(Chat.getHistory().getRecvLine(0).getText().getJson());'}));
     const component=JSON.parse(chatText.output);
     assert.match(JSON.stringify(component),/AGENT/); assert.match(JSON.stringify(component),/aqua/);

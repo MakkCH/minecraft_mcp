@@ -154,7 +154,7 @@ Install `skills/minecraft-mcp` in your agent’s Skill directory as well. For Co
 | `/mcp status` | Show whether control is enabled and how many tasks are active |
 | `/mcp config` or **F8** | Open connection and chat settings |
 
-These are client-side commands. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
+These are client-side commands. The mod interface and agent-authored in-game messages use English. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
 
 The mod adds no blocks, items, entities or world-generation changes. Removing it does not require converting your save. Actions performed by the agent still affect your world and inventory, just as player actions do.
 
