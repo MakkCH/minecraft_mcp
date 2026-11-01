@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],stderr:'pipe'});
+const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:process.env.MINECRAFT_MCP_CONFIG ? {MINECRAFT_MCP_CONFIG:process.env.MINECRAFT_MCP_CONFIG} : {},stderr:'pipe'});
 const client = new Client({name:'minecraft-mcp-live-check',version:'1.0.0'});
 async function call(name,args={}) {
   const r = await client.callTool({name,arguments:args});
@@ -52,20 +52,19 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     const syntax=await json('execute',{code:'const = ;',wait_ms:1000});
     assert.equal(syntax.status,'error');
     // Real Baritone pathfinding must move the actual player to the requested goal.
-    const nav=await collect(await json('execute',{file:root+'skills/minecraft-mcp/scripts/baritone-nearby.js',wait_ms:0}), r=>r.output.includes('NAVIGATION=') || r.status==='error');
+    const nav=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/baritone-nearby.js',wait_ms:0}), r=>r.output.includes('NAVIGATION=') || r.status==='error');
     await call('stop',{task:nav.task});
     const movement=JSON.parse(nav.output.trim().split('NAVIGATION=').at(-1));
     assert.equal(movement.reached,true,JSON.stringify(movement));
     assert.ok(Math.hypot(movement.end.x-movement.start.x,movement.end.z-movement.start.z)>1);
-    await writeFile(root+'artifacts/navigation.json',JSON.stringify(movement,null,2));
     // Check real renderer registration and teardown, not a simulated resource list.
     const drawCount=async () => Number((await collect(await json('execute',{code:'console.log(Hud.listDraw3Ds().size());'}))).output.trim());
     const beforeDraw=await drawCount();
-    const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/scripts/marker.js'}));
+    const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/marker.js'}));
     assert.match(marker.output,/MARKER_REGISTERED/);
     assert.equal(await drawCount(),beforeDraw+1);
     const marked=await call('screenshot');
-    await writeFile(root+'artifacts/marker-screenshot.png',Buffer.from(marked.content.find(c=>c.type==='image').data,'base64'));
+    assert.ok(marked.content.some(c=>c.type==='image'));
     await call('stop',{task:marker.task});
     assert.equal(await drawCount(),beforeDraw);
     // Route through Minecraft's real chat command dispatcher, including stop/start.
@@ -88,6 +87,5 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
     const saved=JSON.parse(capture.content.find(c=>c.type==='text').text).path;
     assert.deepEqual(await readFile(saved),png);
-    await writeFile(root+'artifacts/live-screenshot.png',png);
   } finally { await client.close(); }
 });

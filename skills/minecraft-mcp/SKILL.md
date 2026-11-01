@@ -5,7 +5,7 @@ description: Control and inspect the player's real Minecraft client through the 
 
 # Minecraft MCP
 
-Use the `minecraft_mcp` server's five tools. Keep files, code editing, searches and durable notes in the local filesystem through ordinary agent tools. Do not build another shell or filesystem protocol inside Minecraft.
+Use the `minecraft_mcp` server's five tools. Use a task workspace outside this repository and the installed Skill for code, durable notes and outputs. Use ordinary filesystem/shell tools, and copy examples there before editing them. Do not build another shell or filesystem protocol inside Minecraft.
 
 ## Start with observation
 
@@ -16,7 +16,7 @@ const p = Player.getPlayer();
 console.log(p ? {x:p.getX(), y:p.getY(), z:p.getZ()} : 'No world loaded');
 ```
 
-Use `screenshot` when the view matters. It returns an image directly and an absolute PNG path for local inspection; do not dump base64 or emit the same image again. If the bridge is unavailable, report the connection error and check the instance and `/mcp status`; do not assume the game action succeeded.
+Use `screenshot` when the view matters. It returns an image directly and an absolute PNG path for local inspection; do not dump base64 or emit the same image again. Use the configured Minecraft instance and its installed capabilities; do not assume a particular launcher, world, server or modpack. If the bridge is unavailable, report the connection error and check the instance and `/mcp status`; do not assume the game action succeeded.
 
 ## Execute, observe, stop
 
@@ -33,4 +33,4 @@ The player's `/mcp stop` disables further game actions. Respect it: do not re-en
 
 Each execution is a fresh JsMacros GraalJS context, **not Node.js or a persistent REPL**. Variables do not survive across calls. Use `console.log` or `print` for explicit results; return short JSON-shaped observations instead of Java object dumps. Keep reusable code and durable state in files. Track only relevant task IDs and outcomes in conversational context.
 
-For short game-thread operations use `mcp.mainThread(fn)`; it yields the JS context while waiting and propagates callback errors. Keep long work and tick waits outside its callback. Before scripting callbacks or overlays, read [scripting.md](references/scripting.md). To discover any installed mod (including Baritone or Iris), follow [mods.md](references/mods.md); it uses native metadata, local JAR inspection and direct Java calls. Runnable examples are listed in [scripting.md](references/scripting.md#lifetimes-and-examples). Search [api-index.txt](references/api-index.txt) with `rg` for a needed method; read only the matching signatures and follow their versioned source links when semantics are unclear. The index targets JsMacros Reloaded 2.2.1 / Minecraft 26.3; do not assume older online JsMacros examples match. No need to load the full index into context.
+For short game-thread operations use `mcp.mainThread(fn)`; it yields the JS context while waiting and propagates callback errors. Keep long work and tick waits outside its callback. Before scripting callbacks or overlays, read [scripting.md](references/scripting.md). To discover any installed mod, follow [mods.md](references/mods.md); it uses native metadata, local JAR inspection and direct Java calls. Read-only utilities are in [scripts](references/scripting.md#scripts); editable demonstrations are in [examples](references/scripting.md#examples). Search [api-index.txt](references/api-index.txt) with `rg` for a needed method; read only the matching signatures and follow their versioned source links when semantics are unclear. The bundled index describes JsMacros Reloaded 2.2.1 / Minecraft 26.3. Check the running version and adapt to its API; this reference is not a required instance configuration. No need to load the full index into context.

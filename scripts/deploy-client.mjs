@@ -1,4 +1,4 @@
-// Update only this project's files in an existing Minecraft launcher instance.
+// Update only this project's files in the specified Minecraft instance.
 import { copyFile, mkdir, chmod } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 const instance=process.argv[2];

@@ -20,16 +20,23 @@ It calls `Client.runOnMainThread(JavaWrapper.methodToJava(fn), true, 5000)` with
 
 The native **one-argument** `Client.runOnMainThread(...)` is fire-and-forget. If the originating script keeps the GraalJS context occupied, the main thread waits for that same context until the watchdog closes it. Raw Java `Thread.sleep`, futures/latches and JS busy loops do not release this lock. `methodToJavaAsync` is not a substitute: it moves execution to a worker instead of keeping the operation on the game thread. Do not fix watchdog errors by increasing the timeout or disabling it. Split long work and use the waiting helper; inspect game state before retrying an action that may already have executed. Raw JsMacros APIs remain available when their semantics are needed.
 
-## Lifetimes and examples
+## Lifetimes
 
 For drawings/commands created by a task, call `mcp.track(drawOrCommand)` so stop can unregister them. Task event listeners are removed on stop. Raw Java calls can create resources the bridge cannot discover: explicitly clean up those resources. Errors in later native callbacks can go to the game log rather than task output; catch and `console.error` them.
 
-Runnable examples live in the Skill's `scripts/` directory. Pass their **absolute paths** to `execute(file=...)`, or copy/edit them with local file tools:
+## Scripts
+
+Ready-to-run inspection utilities live in `scripts/`. Pass their absolute paths to `execute(file=...)`. To customize one, copy it into the task workspace first.
 
 - [inspect.js](../scripts/inspect.js): player and installed mod inventory; requires a world.
 - [discover-mods.js](../scripts/discover-mods.js): mod inventory or one mod's version, source links and JAR paths.
-- [marker.js](../scripts/marker.js): tracked 3D marker, removed by `stop`.
-- [baritone-goto.js](../scripts/baritone-goto.js): edit its destination before executing; moves the real player.
-- [baritone-nearby.js](../scripts/baritone-nearby.js): two-block navigation exercise for a disposable world.
+
+## Examples
+
+Editable demonstrations live in `examples/`. Copy them into the task workspace and adapt them to the current world and installed APIs before executing. Keep the installed Skill unchanged.
+
+- [marker.js](../examples/marker.js): tracked 3D marker, removed by `stop`.
+- [baritone-goto.js](../examples/baritone-goto.js): choose a destination; requires Baritone and moves the real player.
+- [baritone-nearby.js](../examples/baritone-nearby.js): two-block navigation exercise for a disposable world with Baritone.
 
 A script returning does not mean an autonomous mod finished its action. Observe its native progress and the player's actual state. `stop` cancels Baritone independently; disconnect cancels old tasks and releases controls.

@@ -1,8 +1,5 @@
 node_modules/
 build/
 dist/
-.runtime/
-artifacts/*
-!artifacts/.gitkeep
 *.log
 .DS_Store

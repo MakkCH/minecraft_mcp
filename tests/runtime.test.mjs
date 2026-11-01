@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 test('real client: main-thread handoff, errors and mod discovery', {timeout:30000}, async t => {
   const client = new Client({name:'minecraft-mcp-runtime-check',version:'1.0.0'});
-  const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],stderr:'pipe'});
+  const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:process.env.MINECRAFT_MCP_CONFIG ? {MINECRAFT_MCP_CONFIG:process.env.MINECRAFT_MCP_CONFIG} : {},stderr:'pipe'});
   const tasks = [];
   async function call(name, args={}) {
     const r = await client.callTool({name,arguments:args});
