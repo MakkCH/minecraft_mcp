@@ -33,7 +33,8 @@ async function applyToken(client,value) {
     const owner=Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE;
     mc.gui.setScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, owner));
     const widgets=Java.from(mc.gui.screen().children());
-    widgets.find(w=>String(w.getMessage().getString())==='Token').setValue(${JSON.stringify(value)});
+    const tokenField=widgets.find(w=>String(w.getMessage().getString())==='Token');
+    tokenField.setValue(''); tokenField.insertText(${JSON.stringify(value)});
     widgets.find(w=>String(w.getMessage().getString())==='Apply').onPress(null);
   }), true, 5000);`;
   await execute(client,`JsMacros.runScript('js',${JSON.stringify(script)}); console.log('scheduled');`);
@@ -51,6 +52,14 @@ test('real mod: auth, protocol gate and UI token rotation', {timeout:20000}, asy
   const oldClient=await clientFor(token), next=randomBytes(32).toString('hex');
   let newClient;
   try {
+    const field=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
+      const mc=Client.getMinecraft();
+      mc.gui.setScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE));
+      const field=Java.from(mc.gui.screen().children()).find(w=>String(w.getMessage().getString())==='Token');
+      field.setFocused(true);
+      return {native:Java.type('net.minecraft.client.gui.components.EditBox').class.isInstance(field), visible:field.isVisible(), editable:field.canConsumeInput()};
+    }));`));
+    assert.deepEqual(field,{native:true,visible:true,editable:true});
     await applyToken(oldClient,next);
     await awaitStatus(token,401);
     await awaitStatus(next,200);

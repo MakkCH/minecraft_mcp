@@ -93,7 +93,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
             String op = req.get("op").getAsString();
             if (!enabled() && !Set.of("stop","screenshot","status").contains(op)) throw new IllegalStateException("Agent control disabled. Use /mcp start in Minecraft.");
             switch (op) {
-                case "status" -> request.complete(status().toString());
+                case "status" -> request.complete(status());
                 case "execute" -> {
                     String code = req.get("code").getAsString();
                     if (code.length() > 900000) throw new IllegalArgumentException("Script too large");
@@ -106,12 +106,13 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                         var container = core.exec("js", prelude + "\n" + code, file, event, () -> job.finish(null), e -> job.finish(e.toString()));
                         job.attach(container.getCtx());
                     } catch (Throwable e) { job.finish(e.toString()); }
-                    request.complete("{\"task\":" + Bridge.quote(job.id) + "}");
+                    JsonObject response = new JsonObject(); response.addProperty("task", job.id);
+                    request.complete(response);
                 }
                 case "stop" -> {
                     if (req.has("task")) { stopJob(bridge.getJob(req.get("task").getAsString())); releaseControls(); }
                     else stopAll();
-                    request.complete(status().toString());
+                    request.complete(status());
                 }
                 case "chat" -> {
                     String message = req.get("message").getAsString();
@@ -119,12 +120,13 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     MutableComponent text = colored("[" + config.tag + "]", config.tagColor);
                     if (!config.name.isEmpty()) text.append(colored(" " + config.name, config.nameColor));
                     localChat(text.append(colored(" " + message, config.messageColor)));
-                    request.complete("{\"displayed\":true}");
+                    JsonObject response = new JsonObject(); response.addProperty("displayed", true);
+                    request.complete(response);
                 }
                 case "screenshot" -> capture(request);
                 default -> throw new IllegalArgumentException("Unknown operation");
             }
-        } catch (Throwable e) { request.complete("{\"error\":" + Bridge.quote(e.toString()) + "}"); }
+        } catch (Throwable e) { request.complete(Bridge.error(e.toString())); }
     }
     private void capture(Bridge.Request request) {
         Screenshot.takeScreenshot(Minecraft.getInstance().gameRenderer.mainRenderTarget(), image -> {
@@ -135,8 +137,10 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     path = Files.createTempFile("minecraft-mcp-capture-", ".png");
                     image.writeToFile(path);
                     String data = Base64.getEncoder().encodeToString(Files.readAllBytes(path));
-                    request.complete("{\"mimeType\":\"image/png\",\"data\":" + Bridge.quote(data) + "}");
-                } catch (Exception e) { request.complete("{\"error\":" + Bridge.quote(e.toString()) + "}"); }
+                    JsonObject response = new JsonObject();
+                    response.addProperty("mimeType", "image/png"); response.addProperty("data", data);
+                    request.complete(response);
+                } catch (Exception e) { request.complete(Bridge.error(e.toString())); }
                 finally { if (path != null) try { Files.deleteIfExists(path); } catch (IOException e) { LOG.warn("Capture cleanup failed", e); } }
             });
         });

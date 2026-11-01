@@ -1,5 +1,8 @@
 package minecraft.mcp;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.*;
@@ -11,6 +14,7 @@ import java.util.concurrent.*;
 
 /** Transport and bounded output only. JsMacros owns script execution and cancellation. */
 public final class Bridge implements AutoCloseable {
+    private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private final HttpServer server;
     private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
     private final BlockingQueue<Request> requests = new ArrayBlockingQueue<>(64);
@@ -54,33 +58,35 @@ public final class Bridge implements AutoCloseable {
     private void handle(HttpExchange x) throws IOException {
         try {
             byte[] supplied = Objects.toString(x.getRequestHeaders().getFirst("Authorization"), "").getBytes(StandardCharsets.UTF_8);
-            if (!MessageDigest.isEqual(token, supplied)) { send(x, 401, "{\"error\":\"Unauthorized\"}"); return; }
-            if (x.getRequestHeaders().containsKey("Origin")) { send(x, 403, "{\"error\":\"Browser requests are not accepted\"}"); return; }
+            if (!MessageDigest.isEqual(token, supplied)) { send(x, 401, error("Unauthorized")); return; }
+            if (x.getRequestHeaders().containsKey("Origin")) { send(x, 403, error("Browser requests are not accepted")); return; }
             String path = x.getRequestURI().getPath();
             if (path.equals("/status") && x.getRequestMethod().equals("GET")) {
-                send(x, 200, "{\"protocol\":1,\"enabled\":" + enabled + "}"); return;
+                JsonObject status = new JsonObject();
+                status.addProperty("protocol", 1); status.addProperty("enabled", enabled);
+                send(x, 200, status); return;
             }
             if (!"1".equals(x.getRequestHeaders().getFirst("X-Minecraft-Mcp-Protocol"))) {
-                send(x, 426, "{\"error\":\"Incompatible MCP protocol; update the MCP server\"}"); return;
+                send(x, 426, error("Incompatible MCP protocol; update the MCP server")); return;
             }
             if (path.equals("/output") && x.getRequestMethod().equals("GET")) {
                 Map<String,String> q = query(x.getRequestURI().getRawQuery());
                 Job job = getJob(q.get("task"));
-                if (job == null) { send(x, 404, "{\"error\":\"Unknown or expired task\"}"); return; }
+                if (job == null) { send(x, 404, error("Unknown or expired task")); return; }
                 int wait = Math.max(0, Math.min(Integer.parseInt(q.getOrDefault("wait_ms", "0")), 10000));
                 send(x, 200, job.read(wait));
             } else if (path.equals("/command") && x.getRequestMethod().equals("POST")) {
                 byte[] bytes = x.getRequestBody().readNBytes(1048577);
-                if (bytes.length > 1048576) { send(x, 413, "{\"error\":\"Request too large\"}"); return; }
+                if (bytes.length > 1048576) { send(x, 413, error("Request too large")); return; }
                 Request r = new Request(new String(bytes, StandardCharsets.UTF_8));
-                if (!requests.offer(r)) { send(x, 503, "{\"error\":\"Client queue full\"}"); return; }
+                if (!requests.offer(r)) { send(x, 503, error("Client queue full")); return; }
                 try { send(x, 200, r.reply.get(15, TimeUnit.SECONDS)); }
                 catch (TimeoutException e) {
                     r.reply.cancel(false); requests.remove(r);
-                    send(x, 504, "{\"error\":\"Minecraft did not respond. Check the Minecraft MCP mod settings. A dispatched action may still have executed; do not blindly retry.\"}");
+                    send(x, 504, error("Minecraft did not respond. Check the Minecraft MCP mod settings. A dispatched action may still have executed; do not blindly retry."));
                 }
-            } else send(x, 404, "{\"error\":\"Unknown endpoint\"}");
-        } catch (Exception e) { send(x, 500, "{\"error\":" + quote(e.toString()) + "}"); }
+            } else send(x, 404, error("Unknown endpoint"));
+        } catch (Exception e) { send(x, 500, error(e.toString())); }
         finally { x.close(); }
     }
     private static Map<String,String> query(String raw) {
@@ -91,23 +97,16 @@ public final class Bridge implements AutoCloseable {
         }
         return out;
     }
-    private static void send(HttpExchange x, int status, String body) throws IOException {
-        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+    private static void send(HttpExchange x, int status, JsonObject body) throws IOException {
+        byte[] bytes = JSON.toJson(body).getBytes(StandardCharsets.UTF_8);
         x.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         x.sendResponseHeaders(status, bytes.length);
         x.getResponseBody().write(bytes);
     }
-    public static String quote(String s) {
-        if (s == null) return "null";
-        StringBuilder b = new StringBuilder("\"");
-        for (char c : s.toCharArray()) {
-            switch (c) {
-                case '"' -> b.append("\\\""); case '\\' -> b.append("\\\\");
-                case '\n' -> b.append("\\n"); case '\r' -> b.append("\\r"); case '\t' -> b.append("\\t");
-                default -> { if (c < 32) b.append(String.format("\\u%04x", (int)c)); else b.append(c); }
-            }
-        }
-        return b.append('"').toString();
+    static JsonObject error(String message) {
+        JsonObject out = new JsonObject();
+        out.addProperty("error", message);
+        return out;
     }
     public void close() {
         enabled = false;
@@ -118,9 +117,9 @@ public final class Bridge implements AutoCloseable {
     }
     public static final class Request {
         public final String body;
-        private final CompletableFuture<String> reply = new CompletableFuture<>();
+        private final CompletableFuture<JsonObject> reply = new CompletableFuture<>();
         Request(String body) { this.body = body; }
-        public void complete(String json) { reply.complete(json); }
+        public void complete(JsonObject json) { reply.complete(json); }
     }
     public static final class Job {
         public final String id;
@@ -161,15 +160,19 @@ public final class Bridge implements AutoCloseable {
             } catch (ReflectiveOperationException ignored) { /* Context compatibility is checked live. */ }
             return "completed";
         }
-        public synchronized String read(int waitMs) throws InterruptedException {
+        public synchronized JsonObject read(int waitMs) throws InterruptedException {
             long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMs);
             while (output.isEmpty() && (status().equals("running") || status().equals("active"))) {
                 long left = deadline - System.nanoTime();
                 if (left <= 0) break;
                 TimeUnit.NANOSECONDS.timedWait(this, left);
             }
-            String result = "{\"task\":" + quote(id) + ",\"status\":" + quote(status()) +
-                ",\"output\":" + quote(output.toString()) + ",\"dropped_chars\":" + dropped + ",\"error\":" + quote(error) + "}";
+            JsonObject result = new JsonObject();
+            result.addProperty("task", id);
+            result.addProperty("status", status());
+            result.addProperty("output", output.toString());
+            result.addProperty("dropped_chars", dropped);
+            result.addProperty("error", error);
             output.setLength(0); dropped = 0;
             return result;
         }
