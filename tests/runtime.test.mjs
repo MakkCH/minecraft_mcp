@@ -30,6 +30,20 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
   }
   await client.connect(transport);
   try {
+    // Verify Java serialization through real HTTP, the MCP SDK and Node's parser.
+    const special = 'JSON: "\\\n\r\t\b\f\u0000\u001f<>&=\'\u2028\u2029🧱漢字';
+    const escaped = await execute({code:`console.log(${JSON.stringify(special)});`});
+    assert.equal(escaped.output, special+'\n');
+    assert.equal(escaped.error, null);
+    assert.equal(escaped.dropped_chars, 0);
+    const invalidWait = '"\\invalid';
+    const rejected = await fetch(`http://127.0.0.1:${process.env.MINECRAFT_MCP_PORT||28473}/output?task=${escaped.task}&wait_ms=${encodeURIComponent(invalidWait)}`, {
+      headers:{Authorization:`Bearer ${process.env.MINECRAFT_MCP_TOKEN}`,'X-Minecraft-Mcp-Protocol':'1'},
+      signal:AbortSignal.timeout(2000)
+    });
+    assert.equal(rejected.status,500);
+    assert.ok((await rejected.json()).error.includes(invalidWait));
+
     // If the caller retains GraalJS's lock while waiting, Minecraft cannot enter
     // this callback. Check the actual render thread and immediate return value.
     const handoff = await execute({code:`

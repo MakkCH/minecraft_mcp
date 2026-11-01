@@ -15,7 +15,7 @@ public final class SettingsScreen extends Screen {
     private final ClientConfig draft;
     private final List<Label> labels = new ArrayList<>();
     private EditBox port, token, tag, tagColor, name, nameColor, messageColor;
-    private boolean chatPage, showToken;
+    private boolean chatPage;
     private String error = "";
     private record Label(String text, int x, int y) { }
 
@@ -25,7 +25,9 @@ public final class SettingsScreen extends Screen {
     }
     @Override protected void init() {
         labels.clear();
-        int left = width / 2 - 155, y = Math.max(47, (height - 210) / 2);
+        int left = width / 2 - 155, top = Math.max(47, (height - 210) / 2), y = top + 30;
+        labels.add(new Label(chatPage ? "Colors accept names or #RRGGBB." : "Paste the same token into your MCP configuration.", left, top));
+        labels.add(new Label("Apply stops active agent tasks.", left, top+12));
         addRenderableWidget(Button.builder(Component.literal(chatPage ? "Connection" : "Chat appearance"), b -> {
             if (readFields()) { chatPage = !chatPage; rebuildWidgets(); }
         }).bounds(left, y, 150, 20).build());
@@ -41,26 +43,20 @@ public final class SettingsScreen extends Screen {
         } else {
             port = field("Port", Integer.toString(draft.port), left, y+29, 160);
             token = field("Token", draft.token, left, y+53, 160);
-            token.setMaxLength(256); token.setValue(draft.token); token.setVisible(showToken);
-            addRenderableWidget(Button.builder(Component.literal(showToken ? "Hide token" : "Show / edit token"), b -> {
-                showToken = !showToken; token.setVisible(showToken); b.setMessage(Component.literal(showToken ? "Hide token" : "Show / edit token"));
-            }).bounds(left, y+79, 150, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Copy token"), b -> minecraft.keyboardHandler.setClipboard(token.getValue()))
-                .bounds(left+160, y+79, 150, 20).build());
+                .bounds(left, y+79, 150, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Generate token"), b -> token.setValue(ClientConfig.newToken()))
-                .bounds(left, y+105, 150, 20).build());
+                .bounds(left+160, y+79, 150, 20).build());
             addRenderableWidget(Button.builder(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")), b -> {
                 draft.autoStart = !draft.autoStart; b.setMessage(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")));
-            }).bounds(left+160, y+105, 150, 20).build());
-            labels.add(new Label("Paste the same token into your MCP configuration.", left, y+133));
+            }).bounds(left, y+105, 310, 20).build());
         }
-        labels.add(new Label("Apply stops active agent tasks. Colors accept names or #RRGGBB.", left, y+157));
         addRenderableWidget(Button.builder(Component.literal("Apply"), b -> {
             if (!readFields()) return;
             try { owner.apply(draft); error = "Saved"; }
             catch (Exception e) { error = e.getMessage(); }
-        }).bounds(left, y+174, 150, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose()).bounds(left+160, y+174, 150, 20).build());
+        }).bounds(left, y+157, 150, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose()).bounds(left+160, y+157, 150, 20).build());
     }
     private EditBox field(String label, String value, int x, int y, int size) {
         labels.add(new Label(label, x, y+6));
@@ -81,7 +77,6 @@ public final class SettingsScreen extends Screen {
         graphics.centeredText(font, title, width/2, 14, 0xFFFFFFFF);
         graphics.centeredText(font, owner.connectionStatus(), width/2, 29, 0xFFAAAAAA);
         for (Label label : labels) graphics.text(font, label.text, label.x, label.y, 0xFFFFFFFF);
-        if (!chatPage && !showToken && token != null) graphics.text(font, "•••••••• (hidden)", token.getX()+4, token.getY()+6, 0xFFAAAAAA);
         if (!error.isEmpty()) graphics.centeredText(font, error, width/2, height-13, error.equals("Saved") ? 0xFF55FF55 : 0xFFFF5555);
     }
     @Override public boolean isPauseScreen() { return false; }
