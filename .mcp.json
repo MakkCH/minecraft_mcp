@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "minecraft_mcp": {
+      "command": "node",
+      "args": ["src/plugin.mjs"],
+      "cwd": ".",
+      "env_vars": ["MINECRAFT_MCP_PORT", "MINECRAFT_MCP_TOKEN", "MINECRAFT_MCP_CONNECTION"]
+    }
+  }
+}

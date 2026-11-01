@@ -17,7 +17,49 @@ The mod adds its own settings and a key binding. It does not install other mods,
 
 ## Install the MCP server and Skill
 
-The MCP server requires **Node.js >=22**. Install the separately packaged `minecraft-mcp-0.2.0.tgz` with npm, or run `npm ci` in a source checkout. The package provides a `minecraft-mcp` executable. Register it with your MCP host; the following source-checkout example uses its absolute entrypoint. For Codex:
+The MCP server requires **Node.js >=22**. The `minecraft-mcp-0.2.1.tgz` package includes the server, its runtime dependencies, Skill and Codex plugin metadata. The Minecraft mod has its own version and remains independently installed.
+
+### Codex desktop plugin
+
+Extract the package into `~/plugins/minecraft-mcp`:
+
+```sh
+mkdir -p ~/plugins/minecraft-mcp
+tar -xzf /absolute/download/minecraft-mcp-0.2.1.tgz -C ~/plugins/minecraft-mcp --strip-components=1
+```
+
+Add the following entry to `plugins` in `~/.agents/plugins/marketplace.json`, preserving existing entries. For a new file, use this complete personal marketplace:
+
+```json
+{
+  "name": "personal",
+  "interface": {"displayName": "Personal"},
+  "plugins": [{
+    "name": "minecraft-mcp",
+    "source": {"source": "local", "path": "./plugins/minecraft-mcp"},
+    "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+    "category": "Productivity"
+  }]
+}
+```
+
+Create `~/.config/minecraft-mcp/connection.json` with the port and token from the Minecraft mod settings:
+
+```json
+{"port": 28473, "token": "PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS"}
+```
+
+This file belongs only to the MCP plugin; Minecraft never reads it. Keep it private (`chmod 600` on macOS/Linux). It is outside the installed plugin, so updates and sharing the package do not include or replace credentials. `MINECRAFT_MCP_CONNECTION` can select another settings file; explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` take precedence over file values.
+
+Run `codex plugin add minecraft-mcp@personal`, then start a new local Codex chat. The plugin appears as **Minecraft MCP** under **Personal** in the Plugins directory. If the directory has not refreshed, reopen it or restart the desktop app. Install from the personal directory in the UI if your Codex version does not provide `plugin add`. See [official plugin packaging](https://developers.openai.com/plugins/build/plugins).
+
+The plugin includes the Skill; do not also install a standalone copy. When migrating from the manual setup below, remove the old `minecraft_mcp` MCP registration and standalone Skill link after verifying the plugin, to avoid duplicate tools and instructions. No Minecraft-side changes are needed.
+
+For an update, replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and use a new chat. Keep connection settings outside the package. This local installation does not publish the plugin to a public directory.
+
+### Other MCP hosts or manual Codex setup
+
+Install the package with npm, or run `npm ci` in a source checkout. It provides a `minecraft-mcp` executable. Register it with your MCP host; the following source-checkout example uses its absolute entrypoint. For Codex:
 
 ```sh
 codex mcp add minecraft_mcp \
@@ -75,7 +117,7 @@ Build the mod using JDK 25:
 ./gradlew build
 ```
 
-On Windows use `gradlew.bat build`. The installable mod JAR is in `build/libs/` (not the `-sources.jar`). The build resolves official Minecraft/Fabric dependencies and JsMacros; it does not package a launcher instance or authentication token. `npm pack --pack-destination /chosen/output` packages the MCP server and Skill separately.
+On Windows use `gradlew.bat build`. The installable mod JAR is in `build/libs/` (not the `-sources.jar`). The build resolves official Minecraft/Fabric dependencies and JsMacros; it does not package a launcher instance or authentication token. Run `npm ci`, then `npm pack --pack-destination /chosen/output` to package the MCP server, runtime dependencies, Skill and plugin metadata separately. No build of the Minecraft mod is needed for plugin-only changes.
 
 - `npm test`: official MCP SDK negotiation, tool schemas and missing-token handling; no game required.
 - `npm run test:runtime`: real-client thread handoffs, callback errors, mod discovery, APIs and screenshots. Set the MCP port/token environment variables and run while agents are idle.

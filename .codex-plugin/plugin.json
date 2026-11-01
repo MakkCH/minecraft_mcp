@@ -1,0 +1,24 @@
+{
+  "name": "minecraft-mcp",
+  "version": "0.2.1",
+  "description": "Control your Minecraft client with JsMacros scripts, screenshots and player takeover. Includes the MCP server and companion Skill.",
+  "author": {"name": "minecraft_mcp contributors"},
+  "keywords": ["minecraft", "jsmacros", "mcp", "automation"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Minecraft MCP",
+    "shortDescription": "Play and inspect your local Minecraft client",
+    "longDescription": "Connect to the Minecraft MCP client mod. Run JsMacros scripts, read incremental output, capture the game view and report progress in local chat. The player can take over with /mcp stop. Requires a local Minecraft instance with the companion mod and JsMacros, plus Node.js 22 or later. Baritone is recommended but optional.",
+    "developerName": "minecraft_mcp contributors",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "Inspect my Minecraft client and show me what is happening.",
+      "Help me gather resources in Minecraft, with progress updates."
+    ],
+    "brandColor": "#438C43",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg"
+  }
+}
