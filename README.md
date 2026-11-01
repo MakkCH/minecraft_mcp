@@ -8,7 +8,7 @@
 
 Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gather resources, build or debug a script. You see what happens from your own player’s perspective and can take over with `/mcp stop`.
 
-It comes in two parts: a **Minecraft client mod** and an **agent plugin containing the MCP server and Skill**. Install and update them independently. Both run on your computer.
+It comes in two parts: a **Minecraft client mod** and an **agent package containing the MCP server and Skill**. Install and update them independently. Both run on your computer. The package includes a Codex plugin; Claude Code, Claude Desktop, Cursor and other local MCP clients can connect to the same server.
 
 ## What you can do
 
@@ -29,38 +29,46 @@ The current client mod targets the following versions. Other Minecraft versions 
 | Java | 25 or later |
 | Scripting mod | JsMacros Reloaded 2.2.1 |
 | Agent runtime | Node.js 22 or later, available on `PATH` |
-| Agent application | Codex desktop, or another local MCP client |
+| Agent application | Codex, Claude Code, Claude Desktop, Cursor, or another client with local stdio MCP support |
 | Recommended mod | Baritone, matching your Minecraft version |
 
 **Baritone is optional but strongly recommended.** Without it, scripts, screenshots and direct player controls still work; navigation and resource gathering require more scripting. JsMacros Reloaded 2.2.1 bundles the Fabric API modules this mod needs.
 
 ## Get started
 
-You need the client mod JAR and the agent plugin archive. The current filenames are `minecraft-mcp-0.2.0.jar` and `minecraft-mcp-0.2.1.tgz`. To produce them from this repository, see [Development](#development).
+Go to [GitHub Releases](../../releases) and download the **client mod JAR** (`.jar`, not the sources JAR) and **agent package** (`.tgz`) listed together in the release. Check the release notes for compatible Minecraft and dependency versions. You do not need to build from source; build instructions are in [Development](#development).
 
 ### 1. Add the mod to Minecraft
 
-1. Open your instance’s game folder in your launcher.
+1. Create or select a Fabric installation matching the release requirements, then open its game folder in your launcher.
 2. Put the Minecraft MCP JAR in `mods/`, alongside JsMacros and, preferably, Baritone.
 3. Launch Minecraft. Press **F8**, or enter **`/mcp config`** in a world.
 4. Copy the **token** and note the **port**. You will use them to pair the agent with this instance.
 
+Use the game folder for the installation you actually launch:
+
+| Launcher | Where to put the JAR |
+| --- | --- |
+| Official Minecraft Launcher | The installation's **Game Directory**, inside `mods/`. With the default directory, this is `.minecraft/mods/` on Windows/Linux or `~/Library/Application Support/minecraft/mods/` on macOS. |
+| Prism Launcher or MultiMC | Open the selected instance's Minecraft folder and use its `mods/` directory, usually `.minecraft/mods/` inside the instance folder. |
+| Other launchers | Open the selected instance's game folder and use its `mods/` directory. |
+
 The settings screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press **Apply** to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
 
-### 2. Install the Codex plugin
+### 2. Install the agent package
 
-The archive includes the MCP server, its dependencies and the Skill. The commands below use macOS/Linux shell syntax; on Windows, use the equivalent folders under your user profile.
+The archive includes the MCP server, its dependencies, the Skill and Codex plugin metadata. Extract it into a stable folder, then choose the setup for your agent below. The commands use macOS/Linux shell syntax; on Windows, use the equivalent folders under your user profile.
 
-Extract the archive into your personal plugin folder:
+Replace the archive path with the `.tgz` you downloaded:
 
 ```sh
 mkdir -p ~/plugins/minecraft-mcp
-tar -xzf /path/to/minecraft-mcp-0.2.1.tgz \
+tar -xzf /path/to/downloaded-agent-package.tgz \
   -C ~/plugins/minecraft-mcp --strip-components=1
 ```
 
 <details>
-<summary>Register Minecraft MCP in your personal plugin directory</summary>
+<summary>Codex: install the bundled plugin</summary>
 
 Create `~/.agents/plugins/marketplace.json` with the following contents. If you already have a marketplace file, add just the Minecraft entry to its `plugins` array and keep its existing name and entries.
 
@@ -79,8 +87,6 @@ Create `~/.agents/plugins/marketplace.json` with the following contents. If you 
 
 This makes the plugin available in your local directory; it does not publish it. See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins) for other installation options.
 
-</details>
-
 Install and enable it:
 
 ```sh
@@ -89,9 +95,54 @@ codex plugin add minecraft-mcp@personal
 
 Use your marketplace’s name instead of `personal` if it differs. You can also install **Minecraft MCP** from that source in the desktop app’s Plugins directory. Reopen the directory or restart the app if the new entry has not appeared.
 
+The plugin already includes the Skill. If you previously configured Minecraft MCP manually, remove that older MCP registration and standalone Skill copy after confirming the plugin works.
+
+</details>
+
+<details>
+<summary>Claude Code, Claude Desktop, Cursor and other MCP clients</summary>
+
+Configure a **local stdio MCP server** that runs `node` with the absolute path to the extracted `src/plugin.mjs`. This entrypoint reads the connection file created in step 3.
+
+For **Cursor**, add the following to `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project). Merge it with any existing servers. See the [Cursor MCP documentation](https://cursor.com/docs/mcp).
+
+```json
+{
+  "mcpServers": {
+    "minecraft_mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/absolute/path/to/minecraft-mcp/src/plugin.mjs"]
+    }
+  }
+}
+```
+
+For **Claude Desktop**, use the same `command` and `args` in the `mcpServers` section of `claude_desktop_config.json`; omit the `type` field. Follow the [local MCP setup guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
+
+For **Claude Code**, register the server with its CLI ([MCP documentation](https://code.claude.com/docs/en/mcp)):
+
+```sh
+claude mcp add --transport stdio --scope user minecraft_mcp \
+  -- node /absolute/path/to/minecraft-mcp/src/plugin.mjs
+```
+
+For **Codex without the plugin**, register it manually:
+
+```sh
+codex mcp add minecraft_mcp \
+  -- node /absolute/path/to/minecraft-mcp/src/plugin.mjs
+```
+
+Other clients may use a different configuration format; the command and entrypoint are the same. These instructions connect to a process on your computer, so use the client's local MCP support.
+
+Also install the complete `skills/minecraft-mcp` folder using your client's Skill support. For manual Codex setup, copy it to `${CODEX_HOME:-$HOME/.codex}/skills/`. If your client does not load Skills, provide `SKILL.md` as instructions and make its referenced files available to the agent. The folder contains API references, utilities and examples that the agent reads when needed.
+
+</details>
+
 ### 3. Pair the agent with your game
 
-Create `~/.config/minecraft-mcp/connection.json` with the values from the Minecraft settings screen:
+Create `~/.config/minecraft-mcp/connection.json` (including its parent directory) with the values from the Minecraft settings screen. On Windows, `~` means your user profile directory, typically `C:\Users\YourName`.
 
 ```json
 {
@@ -100,50 +151,15 @@ Create `~/.config/minecraft-mcp/connection.json` with the values from the Minecr
 }
 ```
 
-On macOS/Linux, restrict access with `chmod 600 ~/.config/minecraft-mcp/connection.json`. This is the **agent’s connection file**. Minecraft manages its own settings through the game UI; the two sides do not share a config file. Keep the token out of the plugin folder so updates and sharing do not include it.
+On macOS/Linux, restrict access with `chmod 600 ~/.config/minecraft-mcp/connection.json`. This is the **agent's connection file**. Minecraft manages its own settings through the game UI; the two sides do not share a config file. Keep the token out of the installed package so updates and sharing do not include it.
 
-Start a **new local Codex chat**, choose Minecraft MCP, and try:
+Restart your client's MCP connection and start a new local chat. Enable Minecraft MCP if your client requires it, then try:
 
 > Inspect my Minecraft client and tell me what you can see.
 
 > Gather some wood nearby and keep me updated in chat.
 
 > Place a visible marker at this location so I can find it again.
-
-The plugin already includes the Skill. If you previously configured Minecraft MCP manually, remove that older MCP registration and standalone Skill copy after confirming the plugin works.
-
-<details>
-<summary>Use another MCP client, or configure Codex manually</summary>
-
-Extract the same archive into a stable folder, or run `npm ci` in a source checkout. Configure your MCP host to start the server with Node:
-
-```json
-{
-  "mcpServers": {
-    "minecraft_mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/minecraft-mcp/src/server.mjs"],
-      "env": {
-        "MINECRAFT_MCP_PORT": "28473",
-        "MINECRAFT_MCP_TOKEN": "PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS"
-      }
-    }
-  }
-}
-```
-
-Your host may use a different configuration format. For manual Codex setup:
-
-```sh
-codex mcp add minecraft_mcp \
-  --env MINECRAFT_MCP_PORT=28473 \
-  --env MINECRAFT_MCP_TOKEN=PASTE_YOUR_TOKEN_FROM_MINECRAFT_SETTINGS \
-  -- node /absolute/path/to/minecraft-mcp/src/server.mjs
-```
-
-Install `skills/minecraft-mcp` in your agent’s Skill directory as well. For Codex, that is `${CODEX_HOME:-$HOME/.codex}/skills/`. The Skill contains API references, utilities and examples that the agent reads when needed.
-
-</details>
 
 ## Staying in control
 
@@ -165,19 +181,21 @@ The mod adds no blocks, items, entities or world-generation changes. Removing it
 | Connection refused | Launch the correct Minecraft instance and check the port in F8 settings |
 | Authentication failed | Copy the same token into the agent’s connection settings, then restart its MCP connection |
 | Agent control disabled | Enter `/mcp start` when you want the agent to resume |
-| Plugin or tools missing | Confirm the plugin is enabled, Node.js is installed, and open a new local chat |
+| Plugin or tools missing | Confirm the plugin or MCP server is enabled, Node.js is installed, and open a new local chat |
 | Port already in use | Give each simultaneously running instance a different port |
 | Incompatible protocol | Update the mod and MCP plugin to compatible versions |
 
-The desktop plugin reads `~/.config/minecraft-mcp/connection.json`. Set `MINECRAFT_MCP_CONNECTION` to use a different file. Explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` values override the file’s values; the standalone server uses these environment variables directly.
+The `src/plugin.mjs` entrypoint used by the Codex plugin and the manual setups above reads `~/.config/minecraft-mcp/connection.json`. Set `MINECRAFT_MCP_CONNECTION` to use a different file. Explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` values override the file's values. To configure the connection entirely through environment variables, launch `src/server.mjs` directly instead.
 
 Minecraft and the MCP server must run on the same computer. The mod listens only on `127.0.0.1` and requires its token. Scripts run with the Minecraft process’s permissions, so connect agents you trust.
 
 ## Updating
 
+Download compatible mod and agent packages from [GitHub Releases](../../releases), then:
+
 - **Minecraft mod:** close Minecraft and replace the JAR in `mods/`.
-- **Agent plugin:** replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
-- **Manual MCP setup:** update the installed package and restart the MCP process.
+- **Codex plugin:** replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
+- **Other clients or manual MCP setup:** replace the extracted package, update any separately installed Skill copy, and restart the MCP process.
 
 Your Minecraft settings and agent connection file stay outside the installed packages. The mod and plugin have separate version numbers; they communicate using a versioned protocol.
 
