@@ -43,7 +43,7 @@ async function awaitStatus(secret,expected) {
   for(let i=0;i<30;i++) { if((await status(secret)).status===expected)return; await delay(100); }
   assert.fail('Authentication state did not change');
 }
-test('real mod: auth, protocol gate and UI token rotation', {timeout:20000}, async () => {
+test('real mod: auth, settings entrypoints and UI token rotation', {timeout:20000}, async t => {
   assert.ok(token,'Set MINECRAFT_MCP_TOKEN');
   assert.equal((await status(token)).status,200);
   assert.equal((await status('wrong-token')).status,401);
@@ -52,6 +52,21 @@ test('real mod: auth, protocol gate and UI token rotation', {timeout:20000}, asy
   const oldClient=await clientFor(token), next=randomBytes(32).toString('hex');
   let newClient;
   try {
+    const menu=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
+      if (!Java.type('net.fabricmc.loader.api.FabricLoader').getInstance().isModLoaded('modmenu')) return {installed:false};
+      const mc=Client.getMinecraft(), previous=mc.gui.screen();
+      const api=Java.type('com.terraformersmc.modmenu.ModMenu');
+      const parent=Java.type('com.terraformersmc.modmenu.api.ModMenuApi').createModsScreen(previous);
+      try {
+        const screen=api.getConfigScreen('minecraft_mcp',parent);
+        mc.gui.setScreen(screen);
+        const settings=Java.type('minecraft.mcp.SettingsScreen').class.isInstance(screen);
+        screen.onClose();
+        return {installed:true,registered:api.hasConfigScreen('minecraft_mcp'),settings,returned:parent.equals(mc.gui.screen())};
+      } finally { mc.gui.setScreen(previous); }
+    }));`));
+    if (menu.installed) assert.deepEqual(menu,{installed:true,registered:true,settings:true,returned:true});
+    else t.diagnostic('Mod Menu not installed; its integration check was skipped.');
     const field=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
       const mc=Client.getMinecraft();
       mc.gui.setScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE));

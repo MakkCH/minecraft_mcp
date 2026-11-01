@@ -42,7 +42,7 @@ Go to [GitHub Releases](../../releases) and download the **client mod JAR** (`.j
 
 1. Create or select a Fabric installation matching the release requirements, then open its game folder in your launcher.
 2. Put the Minecraft MCP JAR in `mods/`, alongside JsMacros and, preferably, Baritone.
-3. Launch Minecraft. Press **F8**, or enter **`/mcp config`** in a world.
+3. Launch Minecraft. With [Mod Menu](https://modrinth.com/mod/modmenu) installed, open **Mods → Minecraft MCP → Configure**. You can also press **F8**, or enter **`/mcp config`** in a world.
 4. Copy the **token** and note the **port**. You will use them to pair the agent with this instance.
 
 Use the game folder for the installation you actually launch:
@@ -53,7 +53,7 @@ Use the game folder for the installation you actually launch:
 | Prism Launcher or MultiMC | Open the selected instance's Minecraft folder and use its `mods/` directory, usually `.minecraft/mods/` inside the instance folder. |
 | Other launchers | Open the selected instance's game folder and use its `mods/` directory. |
 
-The settings screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press **Apply** to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
+All three entrypoints open the same settings screen. Mod Menu is optional. The screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press **Apply** to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
 
 ### 2. Install the agent package
 
@@ -169,6 +169,7 @@ Restart your client's MCP connection and start a new local chat. Enable Minecraf
 | `/mcp start` | Allow agent actions again |
 | `/mcp status` | Show whether control is enabled and how many tasks are active |
 | `/mcp config` or **F8** | Open connection and chat settings |
+| Mod Menu → Minecraft MCP → Configure | Open the same settings screen; **Done** or **Esc** returns to Mod Menu |
 
 These are client-side commands. The mod interface and agent-authored in-game messages use English. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
 
@@ -246,7 +247,7 @@ The editable icon source is `assets/icon.svg`. Both the mod and plugin use its t
 `npm test` checks the real stdio server through the official MCP SDK. These additional checks require a running disposable Minecraft client and the MCP port/token environment variables:
 
 - `npm run test:runtime`: script execution, game-thread callbacks, mod discovery and screenshots.
-- `npm run test:mod`: settings UI, token rotation and authentication.
+- `npm run test:mod`: settings UI, token rotation and authentication; also checks the settings entrypoint and return navigation when Mod Menu is installed.
 - `npm run test:live`: movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
 
 No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcpRunDir=/absolute/test-instance`; the default run directory is in the OS temporary folder.
