@@ -10,6 +10,83 @@ Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gat
 
 It comes in two parts: a **Minecraft client mod** and an **agent package containing the MCP server and Skill**. Install and update them independently. Both run on your computer. The package includes a Codex plugin; Claude Code, Claude Desktop, Cursor and other local MCP clients can connect to the same server.
 
+## From an empty inventory to the End Poem
+
+On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
+
+![The dragon egg and active exit portal after the final fight](assets/runs/2026-11-02/exit-portal.png)
+
+*About 8 hours 21 minutes into the run — The dragon is defeated, the exit portal is open, and the player has survived the final fight.*
+
+| Run | Recorded result |
+| --- | --- |
+| Starting state | Survival mode, empty inventory |
+| Completion | Dragon health reached zero; the exit portal opened; the End Poem was confirmed on screen |
+| Elapsed time | About **8 hours 25 minutes** |
+| Script execution | **856 tasks**, with **2,060 task responses** including follow-up output reads |
+| Milestone journal | **19 screenshots** with timestamps and captions; four are selected here |
+
+Elapsed time includes planning, debugging, recovery and pauses, measured from the initial request to confirmation of the ending screen.
+
+The run used **Minecraft Java 26.3, JsMacros Reloaded 2.2.1 and Baritone 1.20.0** in a local single-player instance. The agent could inspect game state and Java APIs, use the local filesystem and shell, and pause the game while handling dangerous situations. The initial request was to finish Minecraft; a later request added the screenshot journal. This is a documented demonstration of one run with those capabilities.
+
+<details>
+<summary><strong>Run timeline and selected screenshots</strong></summary>
+
+The timeline combines timestamped task output, progress messages and the screenshot journal. Times below are approximate elapsed hours and minutes from the initial request. Screenshots are unedited captures from the player's client.
+
+| Elapsed time (h:mm) | Milestone |
+| --- | --- |
+| 0:00 | Started with an empty inventory; gathered wood, food, iron and equipment. |
+| 0:32 | Activated a Nether portal and entered the Nether. |
+| 0:40 | Located a Nether fortress and approached its blaze spawner. |
+| 0:43–2:14 | Died during the initial approach and recovery attempts. Rebuilt equipment, stored valuables, established a respawn point, and added a low-health pause guard. |
+| 2:46–3:09 | Recovered equipment through sheltered routes, fought blazes, and banked the first two blaze rods. |
+| 3:49 | Died after a ghast knocked the player down; previously banked pearls and rods remained safe. |
+| 5:01 | Finished the pearl-gathering phase with **15 ender pearls**, after repeated gold-mining and piglin-bartering trips. |
+| 5:24–5:33 | Reached **seven blaze rods**, returned to the Overworld and crafted **14 eyes of ender**. |
+| 5:45–5:56 | Used two eye trajectories to estimate the stronghold's location, travelled there, and found the portal room. |
+| 6:01–6:09 | Survived a fall into the portal room's lava, secured the room, set a respawn point and activated the End portal. |
+| 6:11–6:25 | Entered the End, bridged to the main island and destroyed eight crystals. |
+| 6:36 | Opened both crystal cages, but was knocked into the void while descending a tower and lost the carried equipment. |
+| 6:57 | Rebuilt equipment near the stronghold, returned and destroyed the last crystal. **All ten crystals were gone.** |
+| 7:05–7:48 | Repeated melee, shelter and recovery attempts made little progress against the dragon. Switched to preparing beds for explosive attacks. |
+| 7:53–8:05 | Collected wool, crafted **12 beds**, recovered equipment and prepared a protected position beneath the central fountain. |
+| 8:10 | First effective bed explosion: dragon health fell from **185 to 133.4**; player health remained **19.58/20**. |
+| 8:13–8:21 | Repaired the blast shield between attempts. Three more effective explosions reduced dragon health to **75.6 → 24.4 → 0**. |
+| 8:25 | Confirmed the **End Poem**, saved the final screenshot, then stopped automated actions. |
+
+![The activated End portal in the stronghold](assets/runs/2026-11-02/end-portal.png)
+
+*About 6 hours 8 minutes into the run — Twelve eyes in place. The stronghold portal opens, with a respawn point and supplies nearby.*
+
+![The dragon taking damage above the protected bed-explosion position](assets/runs/2026-11-02/bed-strategy.png)
+
+*About 8 hours 10 minutes into the run — The first effective bed explosion deals about 52 damage. Script output confirms the player's blast damage was only 0.42 health points.*
+
+![The End Poem displayed after entering the exit portal](assets/runs/2026-11-02/end-poem.png)
+
+*About 8 hours 25 minutes into the run — The End Poem is visible: the run has reached its verified endpoint.*
+
+</details>
+
+<details>
+<summary><strong>What the run taught us</strong></summary>
+
+**The agent built capabilities during play.** It developed reusable routines for inventory handling, mining, trading, navigation and combat. The chat crossed seven context compactions; scripts and checkpoint notes on disk carried its work forward. Minecraft MCP supplied execution, observation and control, while the agent developed the gameplay logic in its own workspace.
+
+**Preserving progress mattered more than avoiding every death.** Early deaths led to expensive rebuilds. Stored valuables, spare equipment, respawn beds and enclosed routes made later failures easier to recover from. Four hours and 52 minutes elapsed between first entering the Nether and gathering enough blaze rods and pearls, including Overworld resupply trips.
+
+**Changing strategy unlocked the final fight.** After clearing the crystals, the agent spent roughly 50 minutes trying melee positions, rebuilding shelters and recovering equipment. It then prepared a bed strategy. Placing and detonating a bed in the same game-thread callback prevented the dragon from destroying it first; checking the head's position and repairing the shield made the attack repeatable. Four effective explosions finished the remaining 185 health in about 11 minutes. A useful lesson for future agents is to measure damage or other concrete progress and reconsider a strategy when repeated refinements produce little improvement.
+
+**Fast reactions belonged in scripts.** Health checks, shield use, hazard avoidance and attack timing ran in the client. The model handled planning and debugging between actions. Single-player pause/resume was part of the agent's safety strategy; the same behavior would need a different approach on a server that continues running.
+
+**The bridge remained usable throughout the run.** All 2,060 recorded task responses reported zero output-buffer overflow. Errors still occurred in scripts and game actions. One output request used a mistyped task ID and succeeded after correction. Screenshot saving initially failed when image data was embedded in another tool's executable code; the agent recovered by using Minecraft's native screenshot facility. Direct local saving from the screenshot tool remains a useful improvement.
+
+**Completion needed both state and visual checks.** The agent verified zero dragon health and an active exit portal, then checked the actual ending screen. An initial screen lookup returned `null` even though the ending had begun; inspecting the GUI and capturing the End Poem resolved that ambiguity.
+
+</details>
+
 ## What you can do
 
 - **Play together.** The agent controls your real client, with progress messages in local chat.
@@ -217,7 +294,7 @@ The repository contains one agent plugin and its companion Minecraft mod:
 src/                  Node.js MCP server and plugin entrypoint
 skills/minecraft-mcp/ Agent instructions, API references, scripts and examples
 mod/                  Fabric client mod
-assets/               SVG icon source and PNG used by the mod and plugin
+assets/               Icons and selected playthrough screenshots
 scripts/              Developer utilities
 tests/                MCP protocol and real-client integration checks
 ```
@@ -240,7 +317,7 @@ mkdir -p build/distributions
 npm pack --pack-destination build/distributions
 ```
 
-The archive contains the server, runtime dependencies, Skill and plugin metadata. It does not contain Minecraft, a launcher instance or pairing credentials.
+The archive contains the server, runtime dependencies, Skill, plugin metadata and icons. Playthrough screenshots stay in the repository and are excluded from the agent package. The archive does not contain Minecraft, a launcher instance or pairing credentials.
 
 The editable icon source is `assets/icon.svg`. Both the mod and plugin use its transparent 512 × 512 export, `assets/icon.png`; Gradle copies the PNG to the mod's resource path when building. When changing the SVG, refresh the PNG with an SVG renderer such as resvg and check that the terminal symbol and transparency are preserved.
 

@@ -11,7 +11,8 @@
     "LICENSE",
     ".codex-plugin",
     ".mcp.json",
-    "assets"
+    "assets/icon.svg",
+    "assets/icon.png"
   ],
   "type": "module",
   "engines": {
