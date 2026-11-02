@@ -1,6 +1,19 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.19.3'
 }
+def profiles = [
+    '26.1': [minecraft: '26.1.2', versions: ['26.1', '26.1.1', '26.1.2'], fabricApi: '0.151.0+26.1.2', modMenu: '18.0.1'],
+    '26.2': [minecraft: '26.2', versions: ['26.2'], fabricApi: '0.154.2+26.2', modMenu: '20.0.0-beta.4'],
+    '26.3': [minecraft: '26.3', versions: ['26.3'], fabricApi: '0.161.0+26.3', modMenu: '21.0.0']
+]
+def mcProfile = providers.gradleProperty('mcProfile').orElse('26.3').get()
+if (!profiles.containsKey(mcProfile)) throw new GradleException("Unsupported mcProfile: ${mcProfile}. Choose ${profiles.keySet().join(', ')}.")
+def profile = profiles[mcProfile]
+def mcVersion = providers.gradleProperty('mcVersion').orElse(profile.minecraft).get()
+if (!profile.versions.contains(mcVersion)) throw new GradleException("Minecraft ${mcVersion} is not in profile ${mcProfile}.")
+layout.buildDirectory = layout.projectDirectory.dir("build/${mcProfile}")
+base.archivesName = "minecraft-mcp-${mcProfile}"
+
 repositories {
     maven {
         url = 'https://maven.terraformersmc.com/'
@@ -8,29 +21,33 @@ repositories {
     }
     ivy {
         url = 'https://github.com/grepsedawk/JsMacros/releases/download'
-        patternLayout { artifact 'v[revision]/jsmacros-26.3-[revision]-fabric.[ext]' }
+        patternLayout { artifact 'v[revision]/[module]-[revision]-fabric.[ext]' }
         metadataSources { artifact() }
-        content { includeModule 'xyz.wagyourtail', 'jsmacros' }
+        content { includeModule 'xyz.wagyourtail', "jsmacros-${mcProfile}" }
     }
 }
 dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
+    minecraft "com.mojang:minecraft:${mcVersion}"
     implementation "net.fabricmc:fabric-loader:${loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:4.1.9+ffef5f675d"
-    implementation "net.fabricmc.fabric-api:fabric-command-api-v2:3.1.2+fcdff87f5d"
-    implementation "net.fabricmc.fabric-api:fabric-key-mapping-api-v1:2.0.8+3434d6d95d"
-    compileOnly "xyz.wagyourtail:jsmacros:${jsmacros_version}"
-    runtimeOnly "xyz.wagyourtail:jsmacros:${jsmacros_version}"
+    implementation fabricApi.module('fabric-lifecycle-events-v1', profile.fabricApi)
+    implementation fabricApi.module('fabric-command-api-v2', profile.fabricApi)
+    implementation fabricApi.module('fabric-key-mapping-api-v1', profile.fabricApi)
+    compileOnly "xyz.wagyourtail:jsmacros-${mcProfile}:${jsmacros_version}"
+    runtimeOnly "xyz.wagyourtail:jsmacros-${mcProfile}:${jsmacros_version}"
     // Available in the development client, but not bundled or required by the mod.
-    implementation "com.terraformersmc:modmenu:${modmenu_version}"
+    implementation "com.terraformersmc:modmenu:${profile.modMenu}"
 }
 sourceSets.main {
-    java.srcDirs = ['mod/src/main/java']
+    java.srcDirs = ['mod/src/main/java', "mod/src/versions/${mcProfile == '26.1' ? '26.1' : '26.2'}/java"]
     resources.srcDirs = ['mod/src/main/resources']
 }
 processResources {
     inputs.property 'version', project.version
-    filesMatching('fabric.mod.json') { expand version: project.version }
+    inputs.property 'minecraftVersions', profile.versions
+    inputs.property 'loaderVersion', loader_version
+    filesMatching('fabric.mod.json') {
+        expand version: project.version, minecraftVersions: profile.versions.join('", "'), loaderVersion: loader_version
+    }
     from('assets/icon.png') { into 'assets/minecraft_mcp' }
 }
 tasks.withType(Jar).configureEach { from('LICENSE') }
@@ -44,7 +61,7 @@ java {
 loom {
     runs {
         client {
-            runDir = project.findProperty('mcpRunDir') ?: "${System.getProperty('java.io.tmpdir')}/minecraft-mcp-dev"
+            runDir = project.findProperty('mcpRunDir') ?: "${System.getProperty('java.io.tmpdir')}/minecraft-mcp-dev-${mcVersion}"
         }
     }
 }

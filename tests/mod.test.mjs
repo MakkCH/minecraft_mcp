@@ -10,6 +10,13 @@ import { setTimeout as delay } from 'node:timers/promises';
 const server=fileURLToPath(new URL('../src/server.mjs',import.meta.url));
 const port=Number(process.env.MINECRAFT_MCP_PORT||28473);
 const token=process.env.MINECRAFT_MCP_TOKEN;
+// Exercise Minecraft's real screen API, independently of the bridge adapter.
+const screenApi=`
+const currentScreen = () => String(Client.getMod('minecraft').getVersion()).startsWith('26.1')
+  ? Client.getMinecraft().screen : Client.getMinecraft().gui.screen();
+const openScreen = screen => String(Client.getMod('minecraft').getVersion()).startsWith('26.1')
+  ? Client.getMinecraft().setScreen(screen) : Client.getMinecraft().gui.setScreen(screen);
+`;
 const url=`http://127.0.0.1:${port}`;
 const status=secret=>fetch(url+'/status',{headers:{Authorization:`Bearer ${secret}`},signal:AbortSignal.timeout(2000)});
 async function clientFor(secret) {
@@ -18,7 +25,7 @@ async function clientFor(secret) {
   return client;
 }
 async function execute(client,code) {
-  const r=await client.callTool({name:'execute',arguments:{code,wait_ms:1000}});
+  const r=await client.callTool({name:'execute',arguments:{code:screenApi+code,wait_ms:1000}});
   assert.notEqual(r.isError,true,JSON.stringify(r));
   let task=JSON.parse(r.content[0].text), output=task.output;
   for(let i=0;task.status==='running' && i<15;i++) {task=JSON.parse((await client.callTool({name:'read_output',arguments:{task:task.task,wait_ms:1000}})).content[0].text);output+=task.output;}
@@ -28,11 +35,11 @@ async function execute(client,code) {
 async function applyToken(client,value) {
   // Native widgets are real. Apply runs in an unowned JsMacros context because
   // saving settings intentionally cancels all MCP-owned scripts, including us.
-  const script=`Client.waitTick(5); Client.runOnMainThread(JavaWrapper.methodToJava(() => {
+  const script=screenApi+`Client.waitTick(5); Client.runOnMainThread(JavaWrapper.methodToJava(() => {
     const mc=Client.getMinecraft();
     const owner=Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE;
-    mc.gui.setScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, owner));
-    const widgets=Java.from(mc.gui.screen().children());
+    openScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, owner));
+    const widgets=Java.from(currentScreen().children());
     const tokenField=widgets.find(w=>String(w.getMessage().getString())==='Token');
     tokenField.setValue(''); tokenField.insertText(${JSON.stringify(value)});
     widgets.find(w=>String(w.getMessage().getString())==='Apply').onPress(null);
@@ -54,23 +61,23 @@ test('real mod: auth, settings entrypoints and UI token rotation', {timeout:2000
   try {
     const menu=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
       if (!Java.type('net.fabricmc.loader.api.FabricLoader').getInstance().isModLoaded('modmenu')) return {installed:false};
-      const mc=Client.getMinecraft(), previous=mc.gui.screen();
+      const mc=Client.getMinecraft(), previous=currentScreen();
       const api=Java.type('com.terraformersmc.modmenu.ModMenu');
       const parent=Java.type('com.terraformersmc.modmenu.api.ModMenuApi').createModsScreen(previous);
       try {
         const screen=api.getConfigScreen('minecraft_mcp',parent);
-        mc.gui.setScreen(screen);
+        openScreen(screen);
         const settings=Java.type('minecraft.mcp.SettingsScreen').class.isInstance(screen);
         screen.onClose();
-        return {installed:true,registered:api.hasConfigScreen('minecraft_mcp'),settings,returned:parent.equals(mc.gui.screen())};
-      } finally { mc.gui.setScreen(previous); }
+        return {installed:true,registered:api.hasConfigScreen('minecraft_mcp'),settings,returned:parent.equals(currentScreen())};
+      } finally { openScreen(previous); }
     }));`));
     if (menu.installed) assert.deepEqual(menu,{installed:true,registered:true,settings:true,returned:true});
     else t.diagnostic('Mod Menu not installed; its integration check was skipped.');
     const field=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
       const mc=Client.getMinecraft();
-      mc.gui.setScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE));
-      const field=Java.from(mc.gui.screen().children()).find(w=>String(w.getMessage().getString())==='Token');
+      openScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE));
+      const field=Java.from(currentScreen().children()).find(w=>String(w.getMessage().getString())==='Token');
       field.setFocused(true);
       return {native:Java.type('net.minecraft.client.gui.components.EditBox').class.isInstance(field), visible:field.isVisible(), editable:field.canConsumeInput()};
     }));`));

@@ -2,6 +2,8 @@
 
 Use the same path for every mod: installed metadata → public API signatures → direct Java interop. No new MCP endpoint or bridge integration is required. Cache useful versioned signatures in the task workspace; search them with `rg` instead of repeatedly dumping all classes.
 
+On Fabric, identify the running game through `Client.getMod('minecraft').getVersion()`; `Client.mcVersion()` can return a launcher label such as `Fabric` in development. Get the instance directory from `Java.type('net.fabricmc.loader.api.FabricLoader').getInstance().getGameDir()`. Minecraft's JAR can live outside that directory in a shared launcher cache; inspect the `minecraft` mod container's origin instead of guessing a launcher path.
+
 1. Run [discover-mods.js](../scripts/discover-mods.js) to list IDs and versions. `Client.isModLoaded(id)` is a cheap availability check. Copy it into the task workspace and set `modId` to inspect one mod; on Fabric it also returns official source links and local JAR paths. These are metadata, not permission to install or enable another mod.
 2. Inspect that JAR with ordinary shell tools: `jar tf '/path/mod.jar' | rg '/api/.*class$'`, then `javap -classpath '/path/mod.jar' -public package.api.Interface`. Prefer public interfaces over obfuscated implementation classes. If types are missing, add the actual dependency JARs to the classpath; do not guess names from an older release.
 3. Inspect a small live signature subset if needed:

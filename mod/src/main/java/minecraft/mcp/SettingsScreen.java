@@ -80,5 +80,5 @@ public final class SettingsScreen extends Screen {
         if (!error.isEmpty()) graphics.centeredText(font, error, width/2, height-13, error.equals("Saved") ? 0xFF55FF55 : 0xFFFF5555);
     }
     @Override public boolean isPauseScreen() { return false; }
-    @Override public void onClose() { minecraft.gui.setScreen(parent); }
+    @Override public void onClose() { ClientPlatform.setScreen(parent); }
 }
