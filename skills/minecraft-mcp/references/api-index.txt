@@ -1,9 +1,16 @@
-JsMacros Reloaded 2.2.1 / Minecraft 26.3 — compact signature index
+JsMacros Reloaded 2.2.1 — compact signature index
+Checked against the 26.1 (26.1/26.1.1/26.1.2), 26.2 and 26.3 source profiles.
+The listed outer-class public declarations match across all three profiles.
+This is a source comparison, not a client-mod compatibility or runtime guarantee.
 Search with rg. Java types describe GraalJS interop; JavaWrapper converts callbacks.
+Links below use the effective 26.3 sources. Other profile overrides are under:
+https://github.com/grepsedawk/JsMacros/tree/v2.2.1/src/versions
+This covers eight JsMacros classes, not all helpers or Minecraft's native API.
+For example, 26.3 changes brewing/fuel helper behavior; consult versioned source.
 Source Javadocs contain detailed semantics. Do not treat this as Node.js.
 
 FPlayer.java
-https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FPlayer.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/versions/26.3/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FPlayer.java
 public FPlayer(Core<?, ?> runner)
 public Inventory<?> openInventory()
 public ClientPlayerEntityHelper<LocalPlayer> getPlayer()
@@ -152,9 +159,6 @@ public PacketByteBufferHelper createPacketByteBuffer()
 public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable) throws InterruptedException
 public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable, long watchdogMaxTime) throws InterruptedException
 public void runOnMainThread(MethodWrapper<Object, Object, Object, ?> runnable, boolean await, long watchdogMaxTime) throws InterruptedException
-public boolean joined()
-public EventContainer<?> trigger(BaseEvent event)
-public String toString()
 public OptionsHelper getGameOptions()
 public String mcVersion()
 public String getFPS()
@@ -220,7 +224,7 @@ public String ampersandToSectionSymbol(String string)
 public String stripFormatting(String string)
 
 FKeyBind.java
-https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FKeyBind.java
+https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/versions/26.3/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FKeyBind.java
 public FKeyBind(Core<?, ?> runner)
 public Key getKeyCode(String keyName)
 public Map<String, String> getKeyBindings()
@@ -233,11 +237,6 @@ public void pressKeyBind(String keyBind)
 public void releaseKeyBind(String keyBind)
 public Set<String> getPressedKeys()
 public static class KeyTracker
-public synchronized static void press(Key key)
-public synchronized static void press(KeyMapping bind)
-public synchronized static void unpress(Key key)
-public synchronized static void unpress(KeyMapping bind)
-public static synchronized Set<String> getPressedKeys()
 
 FJsMacros.java
 https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/core/java/xyz/wagyourtail/jsmacros/core/library/impl/FJsMacros.java
@@ -265,22 +264,8 @@ public IEventListener on(String event, MethodWrapper<BaseEvent, EventContainer<?
 public IEventListener on(String event, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
 public IEventListener on(String event, EventFilterer filterer, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
 public IEventListener on(String event, EventFilterer filterer, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
-public boolean joined()
-public EventContainer<?> trigger(BaseEvent e)
-public String getCreatorName()
-public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
-public BaseScriptContext<?> getCtx()
-public void off()
-public String toString()
 public IEventListener once(String event, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
 public IEventListener once(String event, boolean joined, MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> callback)
-public boolean joined()
-public EventContainer<?> trigger(BaseEvent e)
-public String getCreatorName()
-public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
-public BaseScriptContext<?> getCtx()
-public void off()
-public String toString()
 public boolean off(IEventListener listener)
 public boolean off(String event, IEventListener listener)
 public void disableAllListeners(String event)
@@ -293,13 +278,6 @@ public EventAndContext<?> waitForEvent(String event, @Nullable MethodWrapper<Bas
 public EventAndContext<?> waitForEvent(String event, boolean join, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter) throws InterruptedException
 public EventAndContext<?> waitForEvent(String event, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter, @Nullable MethodWrapper<Object, Object, Object, ?> runBeforeWaiting) throws InterruptedException
 public EventAndContext<?> waitForEvent(String event, boolean join, @Nullable MethodWrapper<BaseEvent, Object, Boolean, ?> filter, @Nullable MethodWrapper<Object, Object, Object, ?> runBeforeWaiting) throws InterruptedException
-public boolean joined()
-public EventContainer<?> trigger(BaseEvent evt)
-public String getCreatorName()
-public MethodWrapper<BaseEvent, EventContainer<?>, Object, ?> getWrapper()
-public BaseScriptContext<?> getCtx()
-public void off()
-public String toString()
 public List<IEventListener> listeners(String event)
 public EventFilterer createEventFilterer(String event)
 public FiltererComposed createComposedEventFilterer(EventFilterer initial)
@@ -308,10 +286,6 @@ public EventFilterer invertEventFilterer(EventFilterer base)
 public EventCustom createCustomEvent(String eventName)
 public void assertEvent(BaseEvent event, String type)
 public static class EventAndContext<E extends BaseEvent>
-public final E event;
-public final EventContainer<?> context;
-public EventAndContext(E event, EventContainer<?> context)
-public String toString()
 
 ServiceManager.java
 https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/core/java/xyz/wagyourtail/jsmacros/core/service/ServiceManager.java

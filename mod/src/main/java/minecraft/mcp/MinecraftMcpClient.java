@@ -50,7 +50,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> close());
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             if (lastWorld != mc.level) { if (lastWorld != null) stopAll(); lastWorld = mc.level; }
-            if (settingsKey.consumeClick() || openSettings) { openSettings = false; mc.gui.setScreen(new SettingsScreen(mc.gui.screen(), this)); }
+            if (settingsKey.consumeClick() || openSettings) { openSettings = false; ClientPlatform.setScreen(new SettingsScreen(ClientPlatform.screen(), this)); }
             if (bridge == null) return;
             for (int i = 0; i < 4; i++) {
                 Bridge.Request r = bridge.poll(); if (r == null) break;
@@ -129,7 +129,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         } catch (Throwable e) { request.complete(Bridge.error(e.toString())); }
     }
     private void capture(Bridge.Request request) {
-        Screenshot.takeScreenshot(Minecraft.getInstance().gameRenderer.mainRenderTarget(), image -> {
+        ClientPlatform.capture(image -> {
             // GPU capture occurs on the client; PNG encoding/file I/O is off-thread.
             CompletableFuture.runAsync(() -> {
                 Path path = null;
@@ -148,7 +148,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     private static MutableComponent colored(String text, String color) {
         return Component.literal(text).withStyle(Style.EMPTY.withColor(TextColor.parseColor(color).getOrThrow()));
     }
-    private static void localChat(Component text) { Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(text); }
+    private static void localChat(Component text) { ClientPlatform.chat(text); }
     private void stopJob(Bridge.Job job) {
         if (job == null) throw new IllegalArgumentException("Unknown task");
         if (job.getContext() instanceof BaseScriptContext<?> ctx && !ctx.isContextClosed()) {

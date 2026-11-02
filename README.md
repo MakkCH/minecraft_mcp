@@ -20,7 +20,11 @@ On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resource
 
 | Run | Recorded result |
 | --- | --- |
+| Agent model | Codex, model ID **`gpt-6-astra`**, as recorded in the chat's execution metadata |
+| Reasoning effort | **`high`** throughout the recorded turn contexts; no model or effort switch was recorded |
 | Starting state | Survival mode, empty inventory |
+| Difficulty | **Normal**; the recorded in-game difficulty query returned `2` |
+| Environment | Local single-player world with an integrated server; Minecraft Java 26.3, Fabric Loader 0.19.5, JsMacros Reloaded 2.2.1, Baritone API Fabric 1.20.0 |
 | Completion | Dragon health reached zero; the exit portal opened; the End Poem was confirmed on screen |
 | Elapsed time | About **8 hours 25 minutes** |
 | Script execution | **856 tasks**, with **2,060 task responses** including follow-up output reads |
@@ -28,7 +32,7 @@ On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resource
 
 Elapsed time includes planning, debugging, recovery and pauses, measured from the initial request to confirmation of the ending screen.
 
-The run used **Minecraft Java 26.3, JsMacros Reloaded 2.2.1 and Baritone 1.20.0** in a local single-player instance. The agent could inspect game state and Java APIs, use the local filesystem and shell, and pause the game while handling dangerous situations. The initial request was to finish Minecraft; a later request added the screenshot journal. This is a documented demonstration of one run with those capabilities.
+The agent could inspect structured game state and Java APIs, use Baritone, write scripts with the local filesystem and shell, capture screenshots, and pause the single-player game while handling dangerous situations. It also read integrated-server state when checking completion. This was not a vision-only or continuously running real-time benchmark. The initial request was to finish Minecraft; a later request added the screenshot journal. This is a documented demonstration of one run with those capabilities, separate from the compatibility tests below.
 
 <details>
 <summary><strong>Run timeline and selected screenshots</strong></summary>
@@ -97,14 +101,21 @@ The timeline combines timestamped task output, progress messages and the screens
 
 ## Requirements
 
-The current client mod targets the following versions. Other Minecraft versions and loaders are not yet verified.
+Source builds on this branch support the version groups below. For published binaries, check the release notes. Choose the client mod and JsMacros JAR for the same Minecraft version group; the MCP server and Skill are shared across groups.
+
+| Minecraft Java Edition | JAR group | Baritone API Fabric (optional) |
+| --- | --- | --- |
+| 26.1, 26.1.1, 26.1.2 | 26.1 | 1.18.0 |
+| 26.2 | 26.2 | 1.19.0 |
+| 26.3 | 26.3 | 1.20.0 |
+
+Only the listed versions are supported; future 26.x releases and other mod loaders need separate verification.
 
 | Component | Requirement |
 | --- | --- |
-| Minecraft Java Edition | 26.3 |
 | Mod loader | Fabric Loader 0.19.5 or later |
 | Java | 25 or later |
-| Scripting mod | JsMacros Reloaded 2.2.1 |
+| Scripting mod | JsMacros Reloaded 2.2.1, matching the JAR group above |
 | Agent runtime | Node.js 22 or later, available on `PATH` |
 | Agent application | Codex, Claude Code, Claude Desktop, Cursor, or another client with local stdio MCP support |
 | Recommended mod | Baritone, matching your Minecraft version |
@@ -301,13 +312,15 @@ tests/                MCP protocol and real-client integration checks
 
 The plugin metadata, Skill and MCP launch configuration sit at the plugin root. `src/` contains the MCP implementation; `mod/` contains the game integration. Keep gameplay scripts, notes and captures in a separate task workspace.
 
-Build the Minecraft mod with JDK 25:
+Build the Minecraft mod with JDK 25. Each profile produces a separate JAR from the shared bridge and a small client adapter:
 
 ```sh
-./gradlew build
+./gradlew build -PmcProfile=26.1
+./gradlew build -PmcProfile=26.2
+./gradlew build -PmcProfile=26.3
 ```
 
-On Windows, use `gradlew.bat build`. Install the JAR from `build/libs/`, excluding the `-sources.jar`.
+The default profile is 26.3. On Windows, use `gradlew.bat`. Install the JAR from `build/<profile>/libs/`, excluding the `-sources.jar`. The 26.1 profile builds against 26.1.2; `-PmcVersion=26.1` or `-PmcVersion=26.1.1` selects another member of that group for development.
 
 Package the agent plugin with Node.js 22 or later:
 
@@ -327,7 +340,28 @@ The editable icon source is `assets/icon.svg`. Both the mod and plugin use its t
 - `npm run test:mod`: settings UI, token rotation and authentication; also checks the settings entrypoint and return navigation when Mod Menu is installed.
 - `npm run test:live`: movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
 
-No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcpRunDir=/absolute/test-instance`; the default run directory is in the OS temporary folder.
+No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance`; the default run directory is version-specific and in the OS temporary folder. Give each test client a separate MCP port/token and pass those values to the tests. Run the client checks for each supported Minecraft version; source signature checks alone do not establish runtime compatibility.
+
+<details>
+<summary><strong>Compatibility test environment and results</strong></summary>
+
+Verified on **November 3, 2026**, using Minecraft MCP client mod **0.3.0**, Fabric Loader **0.19.5** and JsMacros Reloaded **2.2.1**. The host was **macOS on ARM64**, with **OpenJDK 25.0.2** and **Node.js 24.4.1**. Builds used Gradle **9.8.2** and Fabric Loom **1.19.3**.
+
+Tests ran through Node's built-in test runner and the official MCP SDK against real, isolated Loom development clients. Each client had a separate game directory, port and token. Movement tests used newly created single-player flat test worlds in **Creative mode, Normal difficulty**; native experimental-preset confirmation was accepted where required. These are integration tests, not additional Survival completion runs.
+
+| Minecraft | Baritone API Fabric | Mod Menu | Runtime | Settings/auth | Live gameplay controls |
+| --- | --- | --- | --- | --- | --- |
+| 26.1 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
+| 26.1.1 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
+| 26.1.2 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
+| 26.2 | 1.19.0 | 20.0.0-beta.4 | Pass | Pass | Pass |
+| 26.3 | 1.20.0 | 21.0.0 | Pass | Pass | Pass |
+
+All **15 client integration suites** passed. Coverage includes game-thread handoff and error propagation, incremental output, installed-mod discovery, screenshots, native token input and rotation, Mod Menu navigation, actual Baritone movement, marker registration/removal, cancellation, input release, `/mcp stop`/`start`, and colored local chat. The stdio protocol/schema suite also passed. Packaged class files matched the tested bytecode, including the shared 26.1 JAR group.
+
+Windows, Linux, remote multiplayer servers, other modpacks and future Minecraft releases were not exercised in this matrix.
+
+</details>
 
 The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`. Each execution gets a fresh JsMacros context; running scripts can continue and produce incremental output, but top-level variables are not shared between calls.
 
