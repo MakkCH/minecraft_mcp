@@ -101,7 +101,7 @@ The timeline combines timestamped task output, progress messages and the screens
 
 ## Requirements
 
-Source builds on this branch support the version groups below. For published binaries, check the release notes. Choose the client mod and JsMacros JAR for the same Minecraft version group; the MCP server and Skill are shared across groups.
+The client mod supports the version groups below. Check the release notes for the matching downloads. Choose the client mod and JsMacros JAR for the same Minecraft version group; the MCP server and Skill are shared across groups.
 
 | Minecraft Java Edition | JAR group | Baritone API Fabric (optional) |
 | --- | --- | --- |
