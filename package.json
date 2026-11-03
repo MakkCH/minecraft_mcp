@@ -1,6 +1,6 @@
 {
   "name": "minecraft-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {"name": "Mak", "url": "https://github.com/MakkCH"},
   "license": "MIT",
   "private": true,

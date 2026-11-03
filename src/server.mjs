@@ -10,7 +10,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.MINECRAFT_MCP_PORT || 28473);
 const token = process.env.MINECRAFT_MCP_TOKEN;
 let connected = false;
-const server = new McpServer({name:'minecraft_mcp', version:'0.2.1'}, {
+const server = new McpServer({name:'minecraft_mcp', version:'0.2.2'}, {
   instructions: `Controls the player's real Minecraft client. Follow the minecraft-mcp skill at ${root}/skills/minecraft-mcp/SKILL.md for workflows and API lookup. Player /mcp stop takes priority.`
 });
 async function request(path, body) {
