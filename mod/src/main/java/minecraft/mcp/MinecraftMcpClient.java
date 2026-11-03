@@ -86,7 +86,16 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         out.addProperty("activeTasks", bridge == null ? 0 : Arrays.stream(bridge.getJobs()).filter(j -> Set.of("running","active").contains(j.status())).count());
         return out;
     }
-    private int reportStatus() { localChat(Component.literal("[minecraft_mcp] " + status())); return 1; }
+    private int reportStatus() {
+        JsonObject current = status();
+        localChat(Component.empty().withStyle(Style.EMPTY.withColor(0xFFFFFF))
+            .append(colored("[Minecraft_MCP]", "#FFAA00"))
+            .append(" MCP ")
+            .append(current.get("enabled").getAsBoolean() ? "enabled" : "disabled")
+            .append(" · Active tasks: ")
+            .append(colored(current.get("activeTasks").getAsString(), "#5555FF")));
+        return 1;
+    }
     private void handle(Bridge.Request request) {
         try {
             JsonObject req = JsonParser.parseString(request.body).getAsJsonObject();

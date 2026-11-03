@@ -12,7 +12,9 @@ It comes in two parts: a **Minecraft client mod** and an **agent package contain
 
 ## From an empty inventory to the End Poem
 
-On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
+**To our knowledge, this may be the first documented Minecraft completion from a fresh world by a single general-purpose coding agent using an open-source game-control harness, with progression and dragon-combat code written autonomously during the run rather than provided in advance.**
+
+On **November 1–2, 2026**, a Codex agent running **`gpt-6-astra`** with **`high` reasoning effort** used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
 
 ![The dragon egg and active exit portal after the final fight](assets/runs/2026-11-02/exit-portal.png)
 
@@ -20,8 +22,6 @@ On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resource
 
 | Run | Recorded result |
 | --- | --- |
-| Agent model | Codex, model ID **`gpt-6-astra`**, as recorded in the chat's execution metadata |
-| Reasoning effort | **`high`** throughout the recorded turn contexts; no model or effort switch was recorded |
 | Starting state | Survival mode, empty inventory |
 | Difficulty | **Normal**; the recorded in-game difficulty query returned `2` |
 | Environment | Local single-player world with an integrated server; Minecraft Java 26.3, Fabric Loader 0.19.5, JsMacros Reloaded 2.2.1, Baritone API Fabric 1.20.0 |
@@ -32,7 +32,7 @@ On **November 1–2, 2026**, a Codex agent used Minecraft MCP to gather resource
 
 Elapsed time includes planning, debugging, recovery and pauses, measured from the initial request to confirmation of the ending screen.
 
-The agent could inspect structured game state and Java APIs, use Baritone, write scripts with the local filesystem and shell, capture screenshots, and pause the single-player game while handling dangerous situations. It also read integrated-server state when checking completion. This was not a vision-only or continuously running real-time benchmark. The initial request was to finish Minecraft; a later request added the screenshot journal. This is a documented demonstration of one run with those capabilities, separate from the compatibility tests below.
+The agent could inspect structured game state and Java APIs, use Baritone, write scripts with the local filesystem and shell, capture screenshots, and pause the single-player game while handling dangerous situations. It also read integrated-server state when checking completion. This was not a vision-only or continuously running real-time benchmark. The initial request was to finish Minecraft; a later request added the screenshot journal. This is a documented demonstration of one run with those capabilities.
 
 <details>
 <summary><strong>Run timeline and selected screenshots</strong></summary>
@@ -334,34 +334,13 @@ The archive contains the server, runtime dependencies, Skill, plugin metadata an
 
 The editable icon source is `assets/icon.svg`. Both the mod and plugin use its transparent 512 × 512 export, `assets/icon.png`; Gradle copies the PNG to the mod's resource path when building.
 
-`npm test` checks the real stdio server through the official MCP SDK. These additional checks require a running disposable Minecraft client and the MCP port/token environment variables:
+[`npm test`](tests/protocol.test.mjs) checks the real stdio server through the official MCP SDK. These additional checks require a running disposable Minecraft client and the MCP port/token environment variables:
 
-- `npm run test:runtime`: script execution, game-thread callbacks, mod discovery and screenshots.
-- `npm run test:mod`: settings UI, token rotation and authentication; also checks the settings entrypoint and return navigation when Mod Menu is installed.
-- `npm run test:live`: movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
+- [`npm run test:runtime`](tests/runtime.test.mjs): script execution, game-thread callbacks, mod discovery and screenshots.
+- [`npm run test:mod`](tests/mod.test.mjs): settings UI, token rotation and authentication; also checks the settings entrypoint and return navigation when Mod Menu is installed.
+- [`npm run test:live`](tests/live.test.mjs): movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
 
 No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance`; the default run directory is version-specific and in the OS temporary folder. Give each test client a separate MCP port/token and pass those values to the tests. Run the client checks for each supported Minecraft version.
-
-<details>
-<summary><strong>Compatibility test environment and results</strong></summary>
-
-Verified on **November 3, 2026**, using Minecraft MCP client mod **0.3.0**, Fabric Loader **0.19.5** and JsMacros Reloaded **2.2.1**. The host was **macOS on ARM64**, with **OpenJDK 25.0.2** and **Node.js 24.4.1**. Builds used Gradle **9.8.2** and Fabric Loom **1.19.3**.
-
-Tests ran through Node's built-in test runner and the official MCP SDK against real, isolated Loom development clients. Each client had a separate game directory, port and token. Movement tests used newly created single-player flat test worlds in **Creative mode, Normal difficulty**; native experimental-preset confirmation was accepted where required. These are integration tests, not additional Survival completion runs.
-
-| Minecraft | Baritone API Fabric | Mod Menu | Runtime | Settings/auth | Live gameplay controls |
-| --- | --- | --- | --- | --- | --- |
-| 26.1 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
-| 26.1.1 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
-| 26.1.2 | 1.18.0 | 18.0.1 | Pass | Pass | Pass |
-| 26.2 | 1.19.0 | 20.0.0-beta.4 | Pass | Pass | Pass |
-| 26.3 | 1.20.0 | 21.0.0 | Pass | Pass | Pass |
-
-All **15 client integration suites** passed. Coverage includes game-thread handoff and error propagation, incremental output, installed-mod discovery, screenshots, native token input and rotation, Mod Menu navigation, actual Baritone movement, marker registration/removal, cancellation, input release, `/mcp stop`/`start`, and colored local chat. The stdio protocol/schema suite also passed. Packaged class files matched the tested bytecode, including the shared 26.1 JAR group.
-
-Windows, Linux, remote multiplayer servers, other modpacks and future Minecraft releases were not exercised in this matrix.
-
-</details>
 
 The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`. Each execution gets a fresh JsMacros context; running scripts can continue and produce incremental output, but top-level variables are not shared between calls.
 

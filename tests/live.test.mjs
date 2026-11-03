@@ -68,7 +68,7 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.equal(await drawCount(),beforeDraw);
     // Route through Minecraft's real chat command dispatcher, including stop/start.
     const status=await collect(await json('execute',{code:'Chat.say("/mcp status",true); Client.waitTick(2); console.log(Chat.getHistory().getRecvLine(0).getText().getString());'}));
-    assert.match(status.output,/"enabled":true/);
+    assert.match(status.output,/^\[Minecraft_MCP\] MCP enabled · Active tasks: \d+\s*$/);
     await json('execute',{code:`JsMacros.runScript("js", 'Chat.say("/mcp stop",true); Client.waitTick(60); Chat.say("/mcp start",true);');`,wait_ms:0});
     await delay(300);
     const disabled=await client.callTool({name:'execute',arguments:{code:'console.log("must not execute")'}});
