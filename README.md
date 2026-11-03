@@ -12,7 +12,7 @@ It comes in two parts: a **Minecraft client mod** and an **agent package contain
 
 ## From an empty inventory to the End Poem
 
-**A single Codex agent went from an empty inventory to the End Poem on Normal difficulty in about 8 hours 25 minutes, writing and debugging its own gameplay scripts along the way.**
+**A single general-purpose Codex agent went from an empty inventory to the End Poem on Normal difficulty in about 8 hours 25 minutes, developing its own progression and dragon-combat scripts during play with Minecraft MCP, JsMacros and Baritone—without a supplied walkthrough or prebuilt boss-fight controller.**
 
 On **November 1–2, 2026**, a Codex agent running **`gpt-6-astra`** with **`high` reasoning effort** used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
 
