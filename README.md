@@ -26,7 +26,7 @@ The run took about 8 hours 25 minutes on Normal difficulty in Java 26.3. [Read t
 
 ### F36: a compact 6× shulker box loader
 
-GPT-6 Astra used Minecraft MCP to develop a 3×3×4 single-item shulker box loader, based on [HaJiYue (真-哈基月)’s 3×4×4 design, BV1qP4y1G7mz](https://www.bilibili.com/video/BV1qP4y1G7mz/). Carted modules tile every three blocks at the same height; an isolated module can run without a minecart.
+GPT-6 Astra used Minecraft MCP to develop F36, a 3×3×4 single-item shulker box loader. [HaJiYue (真-哈基月)’s 3×4×4 loader, BV1qP4y1G7mz](https://www.bilibili.com/video/BV1qP4y1G7mz/), served only as a size comparison baseline; F36 is not a modification of that design. Carted modules tile every three blocks at the same height; an isolated module can run without a minecart.
 
 ![The F36 cartless loader core](assets/projects/f36/images/cartless-core.png)
 

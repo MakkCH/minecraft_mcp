@@ -26,7 +26,7 @@ Minecraft MCP 將遊戲連接到支援 MCP 的 Agent。你可以請它探索、�
 
 ### F36：緊湊的 6 倍速界伏盒打包機
 
-GPT-6 Astra 使用 Minecraft MCP，以[真-哈基月的 3×4×4 設計（BV1qP4y1G7mz）](https://www.bilibili.com/video/BV1qP4y1G7mz/)為基礎，開發了 3×3×4 的單物品界伏盒打包機。帶礦車版本可同高度、每三格平鋪；獨立運作的單核心可以不使用礦車。
+GPT-6 Astra 使用 Minecraft MCP 開發了 F36，一台 3×3×4 的單物品界伏盒打包機。[真-哈基月的 3×4×4 打包機（BV1qP4y1G7mz）](https://www.bilibili.com/video/BV1qP4y1G7mz/)僅用作尺寸比較基線，F36 並非在該設計上改造。帶礦車版本可同高度、每三格平鋪；獨立運作的單核心可以不使用礦車。
 
 ![F36 無礦車單核心](assets/projects/f36/images/cartless-core.png)
 
