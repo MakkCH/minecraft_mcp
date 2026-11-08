@@ -1,0 +1,21 @@
+item,quantity,item_id
+Blue ice,7,minecraft:blue_ice
+Comparator,4,minecraft:comparator
+Dispenser,4,minecraft:dispenser
+Dropper,24,minecraft:dropper
+Glass,20,minecraft:glass
+Honey block,28,minecraft:honey_block
+Hopper,36,minecraft:hopper
+Hopper minecart,4,minecraft:hopper_minecart
+Mud,4,minecraft:mud
+Oak fence gate,9,minecraft:oak_fence_gate
+Observer,32,minecraft:observer
+Piston,4,minecraft:piston
+Redstone dust,8,minecraft:redstone
+Redstone torch,4,minecraft:redstone_torch
+Shulker box (working and spare boxes),40,minecraft:shulker_box
+Smooth stone,4,minecraft:smooth_stone
+Sticky piston,4,minecraft:sticky_piston
+Stone slab,8,minecraft:stone_slab
+Wooden shovel (minecart filler),20,minecraft:wooden_shovel
+Water bucket (reusable construction tool),1,minecraft:water_bucket

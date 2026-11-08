@@ -1,0 +1,16 @@
+item,quantity,item_id
+Comparator,1,minecraft:comparator
+Dispenser,1,minecraft:dispenser
+Dropper,6,minecraft:dropper
+Glass,1,minecraft:glass
+Hopper,9,minecraft:hopper
+Hopper minecart,1,minecraft:hopper_minecart
+Mud,1,minecraft:mud
+Observer,8,minecraft:observer
+Piston,1,minecraft:piston
+Redstone dust,2,minecraft:redstone
+Redstone torch,1,minecraft:redstone_torch
+Shulker box (working and spare boxes),10,minecraft:shulker_box
+Smooth stone,1,minecraft:smooth_stone
+Sticky piston,1,minecraft:sticky_piston
+Wooden shovel (minecart filler),5,minecraft:wooden_shovel

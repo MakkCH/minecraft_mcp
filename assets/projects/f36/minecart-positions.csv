@@ -1,0 +1,6 @@
+schematic,region,entity_index,x,y,z,enabled
+F36-carted-array-water.litematic,Machine,0,4.489999990463257,0.875,2.509999990463257,0
+F36-carted-array-water.litematic,Machine,1,7.489999990463257,0.875,2.509999990463257,0
+F36-carted-array-water.litematic,Machine,2,10.489999990463257,0.875,2.509999990463257,0
+F36-carted-array-water.litematic,Machine,3,13.489999990463257,0.875,2.509999990463257,0
+F36-carted-single-core.litematic,Machine,0,2.4899999904632573,0.875,2.509999990463257,0

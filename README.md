@@ -10,7 +10,7 @@ Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gat
 
 It comes in two parts: a **Minecraft client mod** and an **agent package containing the MCP server and Skill**. Install and update them independently. Both run on your computer. The package includes a Codex plugin; Claude Code, Claude Desktop, Cursor and other local MCP clients can connect to the same server.
 
-## Projects
+## Gallery
 
 Projects built with Minecraft MCP, from survival gameplay to in-game engineering. [Browse the project gallery](assets/projects/README.md).
 
@@ -21,6 +21,14 @@ On **November 1–2, 2026**, a Codex agent running **`gpt-6-astra`** with **`hig
 ![The dragon egg and active exit portal after the final fight](assets/projects/end-poem/images/exit-portal.png)
 
 **Normal difficulty · Java 26.3 · About 8 hours 25 minutes.** [Read the complete run, timeline and retrospective](assets/projects/end-poem/README.md).
+
+### F36: a compact 6× shulker box loader
+
+GPT-6 Astra used Minecraft MCP to design, build and test a **3×3×4 single-item shulker box loader**. The core is 25% smaller by bounding-box volume than the original 4×4×3 design. Carted modules tile every three blocks at the same height; an isolated module can run without a minecart.
+
+![The F36 cartless loader core](assets/projects/f36/images/cartless-core.png)
+
+**Java 26.3 · 15 items/s during filling, with pauses for box replacement · Four horizontal orientations tested.** [Watch the video](https://www.bilibili.com/video/BV1JBW76CEM5/) · [Design, tests and three schematic downloads](assets/projects/f36/README.md).
 
 ## What you can do
 
