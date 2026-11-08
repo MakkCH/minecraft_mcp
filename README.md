@@ -6,11 +6,11 @@
 
 [English](README.md) · [繁體中文](README.zh-Hant.md)
 
-**Let an AI agent play in your Minecraft client, while you watch and stay in control.**
+Let an AI agent play in your Minecraft client, while you watch and stay in control.
 
 Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gather resources, build or debug a script. You see what happens from your own player’s perspective and can take over with `/mcp stop`.
 
-It comes in two parts: a **Minecraft client mod** and an **agent package containing the MCP server and Skill**. Install and update them independently. Both run on your computer. The package includes a Codex plugin; Claude Code, Claude Desktop, Cursor and other local MCP clients can connect to the same server.
+It comes in two parts: a Minecraft client mod and an agent package containing the MCP server and Skill. Install and update them independently. Both run on your computer. The package includes a Codex plugin; Claude Code, Claude Desktop, Cursor and other local MCP clients can connect to the same server.
 
 ## Gallery
 
@@ -18,27 +18,27 @@ Projects built with Minecraft MCP, from survival gameplay to in-game engineering
 
 ### From an empty inventory to the End Poem
 
-On **November 1–2, 2026**, a Codex agent running **`gpt-6-astra`** with **`high` reasoning effort** used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
+On November 1–2, 2026, a Codex agent running `gpt-6-astra` with `high` reasoning effort used Minecraft MCP to gather resources, reach the End, defeat the Ender Dragon and enter the End Poem. It wrote and revised its own JavaScript throughout the run: mining and trading, recovering equipment after deaths, building safer routes, and eventually timing bed explosions behind a protective wall.
 
 ![The dragon egg and active exit portal after the final fight](assets/projects/end-poem/images/exit-portal.png)
 
-**Normal difficulty · Java 26.3 · About 8 hours 25 minutes.** [Read the complete run, timeline and retrospective](assets/projects/end-poem/README.md).
+The run took about 8 hours 25 minutes on Normal difficulty in Java 26.3. [Read the complete run, timeline and retrospective](assets/projects/end-poem/README.md).
 
 ### F36: a compact 6× shulker box loader
 
-GPT-6 Astra used Minecraft MCP to design, build and test a **3×3×4 single-item shulker box loader**. The core is 25% smaller by bounding-box volume than the original 4×4×3 design. Carted modules tile every three blocks at the same height; an isolated module can run without a minecart.
+GPT-6 Astra used Minecraft MCP to develop a 3×3×4 single-item shulker box loader, based on [HaJiYue (真-哈基月)’s 3×4×4 design, BV1qP4y1G7mz](https://www.bilibili.com/video/BV1qP4y1G7mz/). Carted modules tile every three blocks at the same height; an isolated module can run without a minecart.
 
 ![The F36 cartless loader core](assets/projects/f36/images/cartless-core.png)
 
-**Java 26.3 · 15 items/s during filling, with pauses for box replacement · Four horizontal orientations tested.** [Watch the video](https://www.bilibili.com/video/BV1JBW76CEM5/) · [Design, tests and three schematic downloads](assets/projects/f36/README.md).
+The three schematics were exported from Java 26.3. [Watch the video](https://www.bilibili.com/video/BV1JBW76CEM5/) or [download the schematics and try the design](assets/projects/f36/README.md).
 
 ## What you can do
 
-- **Play together.** The agent controls your real client, with progress messages in local chat.
-- **Automate with scripts.** JsMacros runs JavaScript in the game; the agent uses its usual editor, files and shell to develop scripts.
-- **See and debug.** Capture the game view, read script output as it arrives, and draw markers in the world.
-- **Use your installed mods.** The Skill teaches the agent how to discover their APIs. Baritone adds navigation, mining and building automation.
-- **Take over.** Stop the agent’s scripts and release its controls from Minecraft.
+- Play together. The agent controls your real client, with progress messages in local chat.
+- Automate with scripts. JsMacros runs JavaScript in the game; the agent uses its usual editor, files and shell to develop scripts.
+- See and debug. Capture the game view, read script output as it arrives, and draw markers in the world.
+- Use your installed mods. The Skill teaches the agent how to discover their APIs. Baritone adds navigation, mining and building automation.
+- Take over. Stop the agent’s scripts and release its controls from Minecraft.
 
 ## Requirements
 
@@ -61,28 +61,28 @@ Only the listed versions are supported; future 26.x releases and other mod loade
 | Agent application | Codex, Claude Code, Claude Desktop, Cursor, or another client with local stdio MCP support |
 | Recommended mod | Baritone, matching your Minecraft version |
 
-**Baritone is optional but strongly recommended.** Without it, scripts, screenshots and direct player controls still work; navigation and resource gathering require more scripting. JsMacros Reloaded 2.2.1 bundles the Fabric API modules this mod needs.
+Baritone is optional but strongly recommended. Without it, scripts, screenshots and direct player controls still work; navigation and resource gathering require more scripting. JsMacros Reloaded 2.2.1 bundles the Fabric API modules this mod needs.
 
 ## Get started
 
-Go to [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) and download the **client mod JAR** (`.jar`, not the sources JAR) and **agent package** (`.tgz`) listed together in the release. Check the release notes for compatible Minecraft and dependency versions. You do not need to build from source; build instructions are in [Development](#development).
+Go to [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) and download the client mod JAR (`.jar`, not the sources JAR) and agent package (`.tgz`) listed together in the release. Check the release notes for compatible Minecraft and dependency versions. You do not need to build from source; build instructions are in [Development](#development).
 
 ### 1. Add the mod to Minecraft
 
 1. Create or select a Fabric installation matching the release requirements, then open its game folder in your launcher.
 2. Put the Minecraft MCP JAR in `mods/`, alongside JsMacros and, preferably, Baritone.
-3. Launch Minecraft. With [Mod Menu](https://modrinth.com/mod/modmenu) installed, open **Mods → Minecraft MCP → Configure**. You can also press **F8**, or enter **`/mcp config`** in a world.
-4. Copy the **token** and note the **port**. You will use them to pair the agent with this instance.
+3. Launch Minecraft. With [Mod Menu](https://modrinth.com/mod/modmenu) installed, open Mods → Minecraft MCP → Configure. You can also press F8, or enter `/mcp config` in a world.
+4. Copy the token and note the port. You will use them to pair the agent with this instance.
 
 Use the game folder for the installation you actually launch:
 
 | Launcher | Where to put the JAR |
 | --- | --- |
-| Official Minecraft Launcher | The installation's **Game Directory**, inside `mods/`. With the default directory, this is `.minecraft/mods/` on Windows/Linux or `~/Library/Application Support/minecraft/mods/` on macOS. |
+| Official Minecraft Launcher | The installation's Game Directory, inside `mods/`. With the default directory, this is `.minecraft/mods/` on Windows/Linux or `~/Library/Application Support/minecraft/mods/` on macOS. |
 | Prism Launcher or MultiMC | Open the selected instance's Minecraft folder and use its `mods/` directory, usually `.minecraft/mods/` inside the instance folder. |
 | Other launchers | Open the selected instance's game folder and use its `mods/` directory. |
 
-All three entrypoints open the same settings screen. Mod Menu is optional. The screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press **Apply** to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
+All three entrypoints open the same settings screen. Mod Menu is optional. The screen also controls automatic startup and the `[AGENT]` tag, optional name and chat colors. Press Apply to save changes; this stops any active agent tasks. F8 can be rebound in Minecraft’s Controls settings.
 
 ### 2. Install the agent package
 
@@ -122,7 +122,7 @@ Install and enable it:
 codex plugin add minecraft-mcp@personal
 ```
 
-Use your marketplace’s name instead of `personal` if it differs. You can also install **Minecraft MCP** from that source in the desktop app’s Plugins directory. Reopen the directory or restart the app if the new entry has not appeared.
+Use your marketplace’s name instead of `personal` if it differs. You can also install Minecraft MCP from that source in the desktop app’s Plugins directory. Reopen the directory or restart the app if the new entry has not appeared.
 
 The plugin already includes the Skill. If you previously configured Minecraft MCP manually, remove that older MCP registration and standalone Skill copy after confirming the plugin works.
 
@@ -131,9 +131,9 @@ The plugin already includes the Skill. If you previously configured Minecraft MC
 <details>
 <summary>Claude Code, Claude Desktop, Cursor and other MCP clients</summary>
 
-Configure a **local stdio MCP server** that runs `node` with the absolute path to the extracted `src/plugin.mjs`. This entrypoint reads the connection file created in step 3.
+Configure a local stdio MCP server that runs `node` with the absolute path to the extracted `src/plugin.mjs`. This entrypoint reads the connection file created in step 3.
 
-For **Cursor**, add the following to `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project). Merge it with any existing servers. See the [Cursor MCP documentation](https://cursor.com/docs/mcp).
+For Cursor, add the following to `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project). Merge it with any existing servers. See the [Cursor MCP documentation](https://cursor.com/docs/mcp).
 
 ```json
 {
@@ -147,16 +147,16 @@ For **Cursor**, add the following to `~/.cursor/mcp.json` (all projects) or `.cu
 }
 ```
 
-For **Claude Desktop**, use the same `command` and `args` in the `mcpServers` section of `claude_desktop_config.json`; omit the `type` field. Follow the [local MCP setup guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
+For Claude Desktop, use the same `command` and `args` in the `mcpServers` section of `claude_desktop_config.json`; omit the `type` field. Follow the [local MCP setup guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
 
-For **Claude Code**, register the server with its CLI ([MCP documentation](https://code.claude.com/docs/en/mcp)):
+For Claude Code, register the server with its CLI ([MCP documentation](https://code.claude.com/docs/en/mcp)):
 
 ```sh
 claude mcp add --transport stdio --scope user minecraft_mcp \
   -- node /absolute/path/to/minecraft-mcp/src/plugin.mjs
 ```
 
-For **Codex without the plugin**, register it manually:
+For Codex without the plugin, register it manually:
 
 ```sh
 codex mcp add minecraft_mcp \
@@ -180,7 +180,7 @@ Create `~/.config/minecraft-mcp/connection.json` (including its parent directory
 }
 ```
 
-On macOS/Linux, restrict access with `chmod 600 ~/.config/minecraft-mcp/connection.json`. This is the **agent's connection file**. Minecraft manages its own settings through the game UI; the two sides do not share a config file. Keep the token out of the installed package so updates and sharing do not include it.
+On macOS/Linux, restrict access with `chmod 600 ~/.config/minecraft-mcp/connection.json`. This is the agent's connection file. Minecraft manages its own settings through the game UI; the two sides do not share a config file. Keep the token out of the installed package so updates and sharing do not include it.
 
 Restart your client's MCP connection and start a new local chat. Enable Minecraft MCP if your client requires it, then try:
 
@@ -197,10 +197,10 @@ Restart your client's MCP connection and start a new local chat. Enable Minecraf
 | `/mcp stop` | Disable agent actions, cancel its scripts and release controls |
 | `/mcp start` | Allow agent actions again |
 | `/mcp status` | Show whether control is enabled and how many tasks are active |
-| `/mcp config` or **F8** | Open connection and chat settings |
-| Mod Menu → Minecraft MCP → Configure | Open the same settings screen; **Done** or **Esc** returns to Mod Menu |
+| `/mcp config` or F8 | Open connection and chat settings |
+| Mod Menu → Minecraft MCP → Configure | Open the same settings screen; Done or Esc returns to Mod Menu |
 
-These are client-side commands. The mod interface and agent-authored in-game messages use English. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
+These are client-side commands. The mod interface is available in English. `[AGENT]` messages stay in your local chat; they are not sent to a multiplayer server. Screenshots remain available while control is disabled. Leaving or changing worlds cancels old tasks.
 
 The mod adds no blocks, items, entities or world-generation changes. Removing it does not require converting your save. Actions performed by the agent still affect your world and inventory, just as player actions do.
 
@@ -223,9 +223,9 @@ Minecraft and the MCP server must run on the same computer. The mod listens only
 
 Download compatible mod and agent packages from [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases), then:
 
-- **Minecraft mod:** close Minecraft and replace the JAR in `mods/`.
-- **Codex plugin:** replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
-- **Other clients or manual MCP setup:** replace the extracted package, update any separately installed Skill copy, and restart the MCP process.
+- Minecraft mod: close Minecraft and replace the JAR in `mods/`.
+- Codex plugin: replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
+- Other clients or manual MCP setup: replace the extracted package, update any separately installed Skill copy, and restart the MCP process.
 
 Your Minecraft settings and agent connection file stay outside the installed packages. The mod and plugin have separate version numbers; they communicate using a versioned protocol.
 
@@ -252,7 +252,7 @@ scripts/              Developer utilities
 tests/                MCP protocol and real-client integration checks
 ```
 
-The plugin metadata, Skill and MCP launch configuration sit at the plugin root. `src/` contains the MCP implementation; `mod/` contains the game integration. Keep gameplay scripts, notes and captures in a separate task workspace.
+The plugin metadata, Skill and MCP launch configuration sit at the plugin root. `src/` contains the MCP implementation; `mod/` contains the game integration.
 
 Build the Minecraft mod with JDK 25. Each profile produces a separate JAR from the shared bridge and a small client adapter:
 
@@ -282,7 +282,7 @@ The editable icon source is `assets/icon.svg`. Both the mod and plugin use its t
 - [`npm run test:mod`](tests/mod.test.mjs): settings UI, token rotation and authentication; also checks the settings entrypoint and return navigation when Mod Menu is installed.
 - [`npm run test:live`](tests/live.test.mjs): movement, Baritone navigation, output, cancellation, markers and player takeover. Requires Baritone and a loaded world.
 
-No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance`; the default run directory is version-specific and in the OS temporary folder. Give each test client a separate MCP port/token and pass those values to the tests. Run the client checks for each supported Minecraft version.
+No mocked game clients are used. Launch a separate development client with `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance`; the default run directory is version-specific and in the OS temporary folder. Give each test client a separate MCP port/token and pass those values to the tests.
 
 The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`. Each execution gets a fresh JsMacros context; running scripts can continue and produce incremental output, but top-level variables are not shared between calls.
 

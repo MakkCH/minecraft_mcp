@@ -6,11 +6,11 @@
 
 [English](README.md) · [繁體中文](README.zh-Hant.md)
 
-**讓 AI Agent 操作你的 Minecraft 客戶端，你可以觀看、一起遊玩，隨時接手。**
+讓 AI Agent 操作你的 Minecraft 客戶端，你可以觀看、一起遊玩，隨時接手。
 
 Minecraft MCP 將遊戲連接到支援 MCP 的 Agent。你可以請它探索、收集資源、建造，或除錯腳本；從自己的玩家視角觀看過程，並隨時用 `/mcp stop` 取回控制權。
 
-專案分為兩部分：**Minecraft 客戶端模組**，以及**包含 MCP server 和 Skill 的 Agent 套件**。兩者都在你的電腦上執行，可以獨立安裝、更新。套件內附 Codex 外掛；Claude Code、Claude Desktop、Cursor 和其他支援本機 MCP 的客戶端也能連接同一個 server。
+專案分為兩部分：Minecraft 客戶端模組，以及包含 MCP server 和 Skill 的 Agent 套件。兩者都在你的電腦上執行，可以獨立安裝、更新。套件內附 Codex 外掛；Claude Code、Claude Desktop、Cursor 和其他支援本機 MCP 的客戶端也能連接同一個 server。
 
 ## Gallery
 
@@ -18,27 +18,27 @@ Minecraft MCP 將遊戲連接到支援 MCP 的 Agent。你可以請它探索、�
 
 ### 從空背包到終末之詩
 
-在 **2026 年 11 月 1–2 日**，一個使用 **`gpt-6-astra`**、**`high` reasoning effort** 的 Codex Agent，透過 Minecraft MCP 收集資源、抵達終界、擊敗終界龍並進入終末之詩。它在遊玩過程中自行編寫、修改 JavaScript，完成採礦、交易、死亡後回收裝備、修築安全路線，最後在防護牆後抓準時機引爆床。
+在 2026 年 11 月 1–2 日，一個使用 `gpt-6-astra`、`high` reasoning effort 的 Codex Agent，透過 Minecraft MCP 收集資源、抵達終界、擊敗終界龍並進入終末之詩。它在遊玩過程中自行編寫、修改 JavaScript，完成採礦、交易、死亡後回收裝備、修築安全路線，最後在防護牆後抓準時機引爆床。
 
 ![擊敗終界龍後的龍蛋與返回傳送門](assets/projects/end-poem/images/exit-portal.png)
 
-**普通難度 · Java 26.3 · 約 8 小時 25 分鐘。** [完整過程、時間線與復盤](assets/projects/end-poem/README.md)。
+這次在 Java 26.3 普通難度下完成，耗時約 8 小時 25 分鐘。 [完整過程、時間線與復盤](assets/projects/end-poem/README.md)。
 
 ### F36：緊湊的 6 倍速界伏盒打包機
 
-GPT-6 Astra 使用 Minecraft MCP 設計、建造並測試了一台 **3×3×4 的單物品界伏盒打包機**，核心包圍盒體積比原本 4×4×3 的設計縮小 25%。帶礦車版本可同高度、每三格平鋪；獨立運作的單核心可以不使用礦車。
+GPT-6 Astra 使用 Minecraft MCP，以[真-哈基月的 3×4×4 設計（BV1qP4y1G7mz）](https://www.bilibili.com/video/BV1qP4y1G7mz/)為基礎，開發了 3×3×4 的單物品界伏盒打包機。帶礦車版本可同高度、每三格平鋪；獨立運作的單核心可以不使用礦車。
 
 ![F36 無礦車單核心](assets/projects/f36/images/cartless-core.png)
 
-**Java 26.3 · 填充期間每秒 15 個物品，換盒時暫停 · 已測試四個水平方向。** [觀看影片](https://www.bilibili.com/video/BV1JBW76CEM5/) · [設計、測試與三份投影下載](assets/projects/f36/README.md)。
+三份投影匯出自 Java 26.3。可以[觀看影片](https://www.bilibili.com/video/BV1JBW76CEM5/)，或[下載投影自行嘗試](assets/projects/f36/README.md)。
 
 ## 可以做什麼
 
-- **一起遊玩。** Agent 操作真實客戶端，透過本機聊天訊息回報進度。
-- **用腳本自動化。** JsMacros 在遊戲內執行 JavaScript，Agent 使用平常的編輯器、檔案與 shell 開發腳本。
-- **觀察與除錯。** 擷取遊戲畫面、增量讀取腳本輸出，在世界中繪製標記。
-- **使用已安裝的模組。** Skill 教 Agent 探索模組 API；Baritone 提供導航、採礦與建造自動化。
-- **隨時接手。** 在 Minecraft 內停止 Agent 腳本並釋放控制。
+- 一起遊玩。 Agent 操作真實客戶端，透過本機聊天訊息回報進度。
+- 用腳本自動化。 JsMacros 在遊戲內執行 JavaScript，Agent 使用平常的編輯器、檔案與 shell 開發腳本。
+- 觀察與除錯。 擷取遊戲畫面、增量讀取腳本輸出，在世界中繪製標記。
+- 使用已安裝的模組。 Skill 教 Agent 探索模組 API；Baritone 提供導航、採礦與建造自動化。
+- 隨時接手。 在 Minecraft 內停止 Agent 腳本並釋放控制。
 
 ## 系統需求
 
@@ -61,28 +61,28 @@ GPT-6 Astra 使用 Minecraft MCP 設計、建造並測試了一台 **3×3×4 的
 | Agent 應用程式 | Codex、Claude Code、Claude Desktop、Cursor，或其他支援本機 stdio MCP 的客戶端 |
 | 建議模組 | 與 Minecraft 版本相符的 Baritone |
 
-**Baritone 並非必要，但強烈建議安裝。** 沒有它仍可執行腳本、截圖與直接操控玩家；導航與資源收集則需要更多腳本。JsMacros Reloaded 2.2.1 已包含本模組所需的 Fabric API 模組。
+Baritone 並非必要，但強烈建議安裝。 沒有它仍可執行腳本、截圖與直接操控玩家；導航與資源收集則需要更多腳本。JsMacros Reloaded 2.2.1 已包含本模組所需的 Fabric API 模組。
 
 ## 開始使用
 
-到 [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) 下載同一 Release 列出的 **客戶端模組 JAR**（`.jar`，不要選 sources JAR）及 **Agent 套件**（`.tgz`）。請先閱讀版本及依賴需求。一般使用者不必從原始碼建置；建置方式見[開發](#開發)。
+到 [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) 下載同一 Release 列出的 客戶端模組 JAR（`.jar`，不要選 sources JAR）及 Agent 套件（`.tgz`）。請先閱讀版本及依賴需求。一般使用者不必從原始碼建置；建置方式見[開發](#開發)。
 
 ### 1. 安裝 Minecraft 模組
 
 1. 建立或選擇符合 Release 需求的 Fabric 安裝，在啟動器中開啟該實例的遊戲資料夾。
 2. 將 Minecraft MCP JAR 放入 `mods/`，並安裝 JsMacros，建議同時安裝 Baritone。
-3. 啟動 Minecraft。若有安裝 [Mod Menu](https://modrinth.com/mod/modmenu)，選擇 **Mods → Minecraft MCP → Configure**。也可按 **F8**，或進入世界後輸入 **`/mcp config`**。
-4. 複製 **token** 並記下 **port**，稍後用來配對 Agent。
+3. 啟動 Minecraft。若有安裝 [Mod Menu](https://modrinth.com/mod/modmenu)，選擇 Mods → Minecraft MCP → Configure。也可按 F8，或進入世界後輸入 `/mcp config`。
+4. 複製 token 並記下 port，稍後用來配對 Agent。
 
 請使用實際啟動的安裝所對應的遊戲資料夾：
 
 | 啟動器 | JAR 放置位置 |
 | --- | --- |
-| 官方 Minecraft Launcher | 該安裝的 **Game Directory** 下的 `mods/`。預設通常是 Windows/Linux 的 `.minecraft/mods/`，或 macOS 的 `~/Library/Application Support/minecraft/mods/`。 |
+| 官方 Minecraft Launcher | 該安裝的 Game Directory 下的 `mods/`。預設通常是 Windows/Linux 的 `.minecraft/mods/`，或 macOS 的 `~/Library/Application Support/minecraft/mods/`。 |
 | Prism Launcher 或 MultiMC | 開啟所選實例的 Minecraft 資料夾，使用其中的 `mods/`；通常位於實例資料夾內的 `.minecraft/mods/`。 |
 | 其他啟動器 | 開啟所選實例的遊戲資料夾，使用其中的 `mods/`。 |
 
-三個設定入口都開啟同一畫面，Mod Menu 為選用。設定畫面也可調整自動啟動、`[AGENT]` 標籤、可選名稱與聊天顏色。按 **Apply** 儲存時會停止正在執行的 Agent 任務。F8 可在 Minecraft 的控制設定中重新綁定。
+三個設定入口都開啟同一畫面，Mod Menu 為選用。設定畫面也可調整自動啟動、`[AGENT]` 標籤、可選名稱與聊天顏色。按 Apply 儲存時會停止正在執行的 Agent 任務。F8 可在 Minecraft 的控制設定中重新綁定。
 
 ### 2. 安裝 Agent 套件
 
@@ -122,7 +122,7 @@ tar -xzf /path/to/downloaded-agent-package.tgz \
 codex plugin add minecraft-mcp@personal
 ```
 
-若 marketplace 不叫 `personal`，請替換成實際名稱。也可在桌面應用程式的 Plugins 目錄中，從該來源安裝 **Minecraft MCP**；若尚未顯示，重新開啟目錄或重啟應用程式。
+若 marketplace 不叫 `personal`，請替換成實際名稱。也可在桌面應用程式的 Plugins 目錄中，從該來源安裝 Minecraft MCP；若尚未顯示，重新開啟目錄或重啟應用程式。
 
 外掛已包含 Skill。若之前手動設定過 Minecraft MCP，確認外掛正常後，移除舊的 MCP 註冊及獨立 Skill 副本。
 
@@ -131,9 +131,9 @@ codex plugin add minecraft-mcp@personal
 <details>
 <summary>Claude Code、Claude Desktop、Cursor 與其他 MCP 客戶端</summary>
 
-設定一個**本機 stdio MCP server**，用 `node` 執行解壓縮後 `src/plugin.mjs` 的絕對路徑。此入口會讀取步驟 3 建立的連線檔案。
+設定一個本機 stdio MCP server，用 `node` 執行解壓縮後 `src/plugin.mjs` 的絕對路徑。此入口會讀取步驟 3 建立的連線檔案。
 
-**Cursor**：將以下內容加入 `~/.cursor/mcp.json`（所有專案）或 `.cursor/mcp.json`（單一專案），保留原有 server 設定。參閱 [Cursor MCP 文件](https://cursor.com/docs/mcp)。
+Cursor：將以下內容加入 `~/.cursor/mcp.json`（所有專案）或 `.cursor/mcp.json`（單一專案），保留原有 server 設定。參閱 [Cursor MCP 文件](https://cursor.com/docs/mcp)。
 
 ```json
 {
@@ -147,16 +147,16 @@ codex plugin add minecraft-mcp@personal
 }
 ```
 
-**Claude Desktop**：在 `claude_desktop_config.json` 的 `mcpServers` 中使用相同的 `command` 與 `args`，省略 `type` 欄位。參閱[本機 MCP 設定指南](https://modelcontextprotocol.io/docs/develop/connect-local-servers)。
+Claude Desktop：在 `claude_desktop_config.json` 的 `mcpServers` 中使用相同的 `command` 與 `args`，省略 `type` 欄位。參閱[本機 MCP 設定指南](https://modelcontextprotocol.io/docs/develop/connect-local-servers)。
 
-**Claude Code**：使用 CLI 註冊（[MCP 文件](https://code.claude.com/docs/en/mcp)）：
+Claude Code：使用 CLI 註冊（[MCP 文件](https://code.claude.com/docs/en/mcp)）：
 
 ```sh
 claude mcp add --transport stdio --scope user minecraft_mcp \
   -- node /absolute/path/to/minecraft-mcp/src/plugin.mjs
 ```
 
-**不使用外掛的 Codex**：手動註冊：
+不使用外掛的 Codex：手動註冊：
 
 ```sh
 codex mcp add minecraft_mcp \
@@ -180,7 +180,7 @@ codex mcp add minecraft_mcp \
 }
 ```
 
-在 macOS/Linux，可用 `chmod 600 ~/.config/minecraft-mcp/connection.json` 限制讀取權限。這是 **Agent 的連線檔案**；Minecraft 的設定由遊戲介面自行管理，兩者不共用設定檔。Token 應放在套件外，避免更新或分享時一併包含。
+在 macOS/Linux，可用 `chmod 600 ~/.config/minecraft-mcp/connection.json` 限制讀取權限。這是 Agent 的連線檔案；Minecraft 的設定由遊戲介面自行管理，兩者不共用設定檔。Token 應放在套件外，避免更新或分享時一併包含。
 
 重新啟動客戶端的 MCP 連線並開啟新的本機對話；若客戶端有開關，啟用 Minecraft MCP。可以試著說：
 
@@ -197,10 +197,10 @@ codex mcp add minecraft_mcp \
 | `/mcp stop` | 停用 Agent 操作、取消腳本並釋放控制 |
 | `/mcp start` | 重新允許 Agent 操作 |
 | `/mcp status` | 顯示控制是否啟用及目前任務數 |
-| `/mcp config` 或 **F8** | 開啟連線與聊天設定 |
-| Mod Menu → Minecraft MCP → Configure | 開啟相同設定畫面；**Done** 或 **Esc** 返回 Mod Menu |
+| `/mcp config` 或 F8 | 開啟連線與聊天設定 |
+| Mod Menu → Minecraft MCP → Configure | 開啟相同設定畫面；Done 或 Esc 返回 Mod Menu |
 
-以上均為客戶端指令。模組介面及 Agent 在遊戲內撰寫的訊息使用英文。`[AGENT]` 訊息只顯示在本機聊天欄，不會傳送到多人伺服器。停用控制後仍可截圖；離開或切換世界會取消舊任務。
+以上均為客戶端指令。模組介面目前僅提供英文。`[AGENT]` 訊息只顯示在本機聊天欄，不會傳送到多人伺服器。停用控制後仍可截圖；離開或切換世界會取消舊任務。
 
 模組不新增方塊、物品、實體或世界生成內容，移除時不需轉換存檔。Agent 的實際操作仍會像玩家操作一樣，影響世界與背包。
 
@@ -223,9 +223,9 @@ Minecraft 與 MCP server 必須在同一台電腦上執行。模組僅監聽 `12
 
 從 [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) 下載相容的模組與 Agent 套件後：
 
-- **Minecraft 模組：** 關閉 Minecraft，替換 `mods/` 中的 JAR。
-- **Codex 外掛：** 替換解壓縮後的套件，再執行 `codex plugin add minecraft-mcp@personal`，並開啟新對話。
-- **其他客戶端或手動 MCP 設定：** 替換套件、更新獨立安裝的 Skill 副本，並重啟 MCP 程序。
+- Minecraft 模組： 關閉 Minecraft，替換 `mods/` 中的 JAR。
+- Codex 外掛： 替換解壓縮後的套件，再執行 `codex plugin add minecraft-mcp@personal`，並開啟新對話。
+- 其他客戶端或手動 MCP 設定： 替換套件、更新獨立安裝的 Skill 副本，並重啟 MCP 程序。
 
 Minecraft 設定及 Agent 連線檔案都位於安裝套件外。模組與外掛有獨立版本號，使用有版本標記的通訊協定互通。
 
@@ -252,7 +252,7 @@ scripts/              開發工具
 tests/                MCP 協定與真實客戶端整合檢查
 ```
 
-外掛資訊、Skill 與 MCP 啟動設定位於外掛根目錄；`src/` 負責 MCP，`mod/` 負責遊戲整合。遊玩腳本、筆記與截圖請存放在獨立的任務工作目錄。
+外掛資訊、Skill 與 MCP 啟動設定位於外掛根目錄；`src/` 負責 MCP，`mod/` 負責遊戲整合。
 
 使用 JDK 25 建置模組。每個 profile 由共用 bridge 與小型客戶端適配層產生獨立 JAR：
 
@@ -282,7 +282,7 @@ npm pack --pack-destination build/distributions
 - [`npm run test:mod`](tests/mod.test.mjs)：設定 UI、token 更新及驗證；若安裝 Mod Menu，也檢查其設定入口與返回操作。
 - [`npm run test:live`](tests/live.test.mjs)：移動、Baritone 導航、輸出、取消、標記與玩家接手。需要 Baritone 及已載入的世界。
 
-測試不使用模擬遊戲客戶端。可用 `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance` 啟動獨立開發客戶端；預設執行目錄依版本區分，位於作業系統暫存資料夾。為各測試客戶端設定獨立的 port/token，並傳入測試。各支援版本應分別執行客戶端檢查。
+測試不使用模擬遊戲客戶端。可用 `./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance` 啟動獨立開發客戶端；預設執行目錄依版本區分，位於作業系統暫存資料夾。為各測試客戶端設定獨立的 port/token，並傳入測試。
 
 五個 MCP 工具為 `execute`、`read_output`、`stop`、`screenshot` 和 `chat`。每次執行都建立新的 JsMacros context；腳本可以持續執行並產生增量輸出，但頂層變數不會跨呼叫共用。
 
