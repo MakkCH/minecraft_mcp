@@ -4,6 +4,8 @@
 
 # Minecraft MCP
 
+[English](README.md) · [繁體中文](README.zh-Hant.md)
+
 **Let an AI agent play in your Minecraft client, while you watch and stay in control.**
 
 Minecraft MCP connects your game to an MCP-capable agent. Ask it to explore, gather resources, build or debug a script. You see what happens from your own player’s perspective and can take over with `/mcp stop`.
@@ -63,7 +65,7 @@ Only the listed versions are supported; future 26.x releases and other mod loade
 
 ## Get started
 
-Go to [GitHub Releases](../../releases) and download the **client mod JAR** (`.jar`, not the sources JAR) and **agent package** (`.tgz`) listed together in the release. Check the release notes for compatible Minecraft and dependency versions. You do not need to build from source; build instructions are in [Development](#development).
+Go to [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases) and download the **client mod JAR** (`.jar`, not the sources JAR) and **agent package** (`.tgz`) listed together in the release. Check the release notes for compatible Minecraft and dependency versions. You do not need to build from source; build instructions are in [Development](#development).
 
 ### 1. Add the mod to Minecraft
 
@@ -112,7 +114,7 @@ Create `~/.agents/plugins/marketplace.json` with the following contents. If you 
 }
 ```
 
-This makes the plugin available in your local directory; it does not publish it. See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins) for other installation options.
+For this personal marketplace, `./plugins/minecraft-mcp` resolves from your home directory to `~/plugins/minecraft-mcp`, not from the `.agents/plugins/` folder. This makes the plugin available in your local directory; it does not publish it. See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins) for other installation options.
 
 Install and enable it:
 
@@ -219,7 +221,7 @@ Minecraft and the MCP server must run on the same computer. The mod listens only
 
 ## Updating
 
-Download compatible mod and agent packages from [GitHub Releases](../../releases), then:
+Download compatible mod and agent packages from [GitHub Releases](https://github.com/MakkCH/minecraft_mcp/releases), then:
 
 - **Minecraft mod:** close Minecraft and replace the JAR in `mods/`.
 - **Codex plugin:** replace the extracted package, run `codex plugin add minecraft-mcp@personal` again, and start a new chat.
