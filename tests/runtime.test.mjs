@@ -30,6 +30,16 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
   }
   await client.connect(transport);
   try {
+    // A final log can wake the output reader before JsMacros reports completion.
+    // execute must continue waiting; collecting via read_output would hide this race.
+    const finalLog = JSON.parse((await call('execute', {
+      code:'console.log("before"); Java.type("java.lang.Thread").sleep(150); console.log("last");',
+      wait_ms:5000
+    })).content[0].text);
+    tasks.push(finalLog.task);
+    assert.equal(finalLog.status, 'completed');
+    assert.equal(finalLog.output, 'before\nlast\n');
+
     // Verify Java serialization through real HTTP, the MCP SDK and Node's parser.
     const special = 'JSON: "\\\n\r\t\b\f\u0000\u001f<>&=\'\u2028\u2029🧱漢字';
     const escaped = await execute({code:`console.log(${JSON.stringify(special)});`});

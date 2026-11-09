@@ -74,7 +74,7 @@ public final class Bridge implements AutoCloseable {
                 Job job = getJob(q.get("task"));
                 if (job == null) { send(x, 404, error("Unknown or expired task")); return; }
                 int wait = Math.max(0, Math.min(Integer.parseInt(q.getOrDefault("wait_ms", "0")), 10000));
-                send(x, 200, job.read(wait));
+                send(x, 200, job.read(wait, Boolean.parseBoolean(q.getOrDefault("wait_for_completion", "false"))));
             } else if (path.equals("/command") && x.getRequestMethod().equals("POST")) {
                 byte[] bytes = x.getRequestBody().readNBytes(1048577);
                 if (bytes.length > 1048576) { send(x, 413, error("Request too large")); return; }
@@ -160,9 +160,12 @@ public final class Bridge implements AutoCloseable {
             } catch (ReflectiveOperationException ignored) { /* Context compatibility is checked live. */ }
             return "completed";
         }
-        public synchronized JsonObject read(int waitMs) throws InterruptedException {
+        public synchronized JsonObject read(int waitMs, boolean waitForCompletion) throws InterruptedException {
             long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMs);
-            while (output.isEmpty() && (status().equals("running") || status().equals("active"))) {
+            // execute waits for the script body; read_output streams as soon as output arrives.
+            // Native callbacks may keep a finished body active indefinitely.
+            while (waitForCompletion ? status().equals("running")
+                    : output.isEmpty() && (status().equals("running") || status().equals("active"))) {
                 long left = deadline - System.nanoTime();
                 if (left <= 0) break;
                 TimeUnit.NANOSECONDS.timedWait(this, left);

@@ -22,7 +22,7 @@ Use `screenshot` when the view matters. It returns the image directly over the c
 
 ## Execute, observe, stop
 
-- `execute`: provide exactly one of `code` or an absolute local `file`. Write substantial scripts with normal file tools, then execute the file. `wait_ms` defaults to 1000 and is capped at 10000. Output may arrive before completion; keep the returned task ID.
+- `execute`: provide exactly one of `code` or an absolute local `file`. Write substantial scripts with normal file tools, then execute the file. `wait_ms` defaults to 1000 and is capped at 10000. Waits for the script body to finish or the deadline, even if output arrives earlier. A deadline does not stop the script; keep the returned task ID if still running.
 - `read_output`: pass the task ID and optionally `wait_ms` up to 10000. This consumes only new output from an in-memory buffer; no file roundtrip is needed. Assign one reader per task. Inspect `dropped_chars` for overflow; don't treat truncated output as complete evidence.
 - `stop`: omit `task` to stop all MCP-owned scripts, or specify one. Either form also cancels Baritone and releases scripted keys because they share one player. Stop ongoing control when the human takes over.
 - `chat`: pass message text without the tag, e.g. `I have collected wood. Next, I will craft tools.` The configured colored `[AGENT]` tag and optional name are added automatically. This displays locally; it does not send multiplayer messages. Report useful milestones, not every poll.

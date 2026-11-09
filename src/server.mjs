@@ -39,13 +39,13 @@ const safe = fn => async args => {
   catch (error) { return {isError:true, content:[{type:'text', text:`${error.message}${error.cause ? ': '+error.cause.message : ''}. Check the mod settings, MCP port/token and /mcp status.`} ]}; }
 };
 server.registerTool('execute', {
-  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Returns early with task ID when still running; use read_output. This is GraalJS, not Node.js.',
+  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Waits up to wait_ms for the script body to finish, then returns a task ID and buffered output; use read_output if still running. This is GraalJS, not Node.js.',
   inputSchema:{code:z.string().max(900000).optional(), file:z.string().optional(), wait_ms:z.number().int().min(0).max(10000).default(1000)}
 }, safe(async ({code,file,wait_ms}) => {
   if ((code === undefined) === (file === undefined)) throw new Error('Provide exactly one of code or file');
   if (file) { file = resolve(file); code = await readFile(file, 'utf8'); }
   const task = await request('/command', {op:'execute', code, file});
-  return text(await request(`/output?task=${encodeURIComponent(task.task)}&wait_ms=${wait_ms}`));
+  return text(await request(`/output?task=${encodeURIComponent(task.task)}&wait_ms=${wait_ms}&wait_for_completion=true`));
 }));
 server.registerTool('read_output', {
   description:'Read and consume newly buffered output for a task, plus its native execution state. No filesystem needed. Single-reader stream; no output is repeated. Bounded buffer reports dropped_chars on overflow.',
