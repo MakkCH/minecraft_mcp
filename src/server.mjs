@@ -39,7 +39,7 @@ const safe = fn => async args => {
   catch (error) { return {isError:true, content:[{type:'text', text:`${error.message}${error.cause ? ': '+error.cause.message : ''}. Check the mod settings, MCP port/token and /mcp status.`} ]}; }
 };
 server.registerTool('execute', {
-  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Waits up to wait_ms for the script body to finish, then returns a task ID and buffered output; use read_output if still running. This is GraalJS, not Node.js.',
+  description:'Run JS code OR an absolute local .js file in a fresh JsMacros context. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Waits up to wait_ms for the script body to finish, then returns a task ID and buffered output; retain the ID for read_output or stop when running or active. This is GraalJS, not Node.js.',
   inputSchema:{code:z.string().max(900000).optional(), file:z.string().optional(), wait_ms:z.number().int().min(0).max(10000).default(1000)}
 }, safe(async ({code,file,wait_ms}) => {
   if ((code === undefined) === (file === undefined)) throw new Error('Provide exactly one of code or file');
