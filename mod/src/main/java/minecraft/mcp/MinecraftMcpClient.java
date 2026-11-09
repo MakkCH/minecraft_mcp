@@ -160,12 +160,14 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     private static void localChat(Component text) { ClientPlatform.chat(text); }
     private void stopJob(Bridge.Job job) {
         if (job == null) throw new IllegalArgumentException("Unknown task");
+        // Closing a callback context can change active to completed; capture it first.
+        boolean cancelled = Set.of("running", "active").contains(job.status());
         if (job.getContext() instanceof BaseScriptContext<?> ctx && !ctx.isContextClosed()) {
             for (var entry : new ArrayList<>(ctx.eventListeners.entrySet()))
                 JsMacrosClient.clientCore.eventRegistry.removeListener(entry.getValue(), entry.getKey());
             ctx.closeContext();
         }
-        job.stopped();
+        job.stopped(cancelled);
     }
     private void stopAll() {
         if (bridge != null) for (Bridge.Job job : bridge.getJobs()) {

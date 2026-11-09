@@ -144,10 +144,10 @@ public final class Bridge implements AutoCloseable {
         }
         public synchronized void finish(String error) { this.error = error; mainDone = true; notifyAll(); }
         public synchronized void track(Object obj) { tracked.add(obj); }
-        public synchronized void stopped() {
+        public synchronized void stopped(boolean cancelled) {
             for (Object obj : tracked) try { obj.getClass().getMethod("unregister").invoke(obj); }
             catch (ReflectiveOperationException e) { write("[cleanup] " + e); }
-            tracked.clear(); stopped = true; notifyAll();
+            tracked.clear(); stopped |= cancelled; notifyAll();
         }
         public synchronized String status() {
             if (stopped) return "stopped";
