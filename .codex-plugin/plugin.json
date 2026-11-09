@@ -1,6 +1,6 @@
 {
   "name": "minecraft-mcp",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Control your Minecraft client with JsMacros scripts, screenshots and player takeover. Includes the MCP server and companion Skill.",
   "author": {"name": "Mak", "url": "https://github.com/MakkCH"},
   "license": "MIT",

@@ -86,7 +86,27 @@ Baritone 並非必要，但強烈建議安裝。 沒有它仍可執行腳本、�
 
 ### 2. 安裝 Agent 套件
 
-壓縮檔包含 MCP server、執行依賴、Skill 與 Codex 外掛資訊。將它解壓縮至固定位置，再依你的 Agent 選擇下方設定方式。指令使用 macOS/Linux shell 語法；Windows 請使用使用者資料夾下對應的位置。
+一般 MCP 客戶端也可使用下列設定執行 npm 套件。在客戶端填入步驟 1 的 token 與 port。此入口使用環境變數，不讀取 `connection.json`。套件包含 Skill，MCP 初始化指示會提供其安裝路徑。
+
+```json
+{
+  "mcpServers": {
+    "minecraft_mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@makkch/minecraft-mcp@0.2.3"
+      ],
+      "env": {
+        "MINECRAFT_MCP_TOKEN": "YOUR_TOKEN",
+        "MINECRAFT_MCP_PORT": "28473"
+      }
+    }
+  }
+}
+```
+
+或使用 GitHub Release 壓縮檔，內含 MCP server、執行依賴、Skill 與 Codex 外掛資訊。將它解壓縮至固定位置，再依你的 Agent 選擇下方設定方式。指令使用 macOS/Linux shell 語法；Windows 請使用使用者資料夾下對應的位置。
 
 將壓縮檔路徑替換成實際下載位置：
 
@@ -171,6 +191,8 @@ codex mcp add minecraft_mcp \
 
 ### 3. 將 Agent 與遊戲配對
 
+若使用上述 npm 設定，已透過 `env` 配對，可略過下方連線檔案。
+
 建立 `~/.config/minecraft-mcp/connection.json`（包含上層資料夾），填入 Minecraft 設定畫面的值。Windows 的 `~` 指使用者資料夾，通常為 `C:\Users\YourName`。
 
 ```json
@@ -215,7 +237,7 @@ codex mcp add minecraft_mcp \
 | Port already in use | 為同時執行的每個實例分配不同 port |
 | Incompatible protocol | 將模組與 MCP 外掛更新至相容版本 |
 
-Codex 外掛與上述手動設定皆使用 `src/plugin.mjs`，預設讀取 `~/.config/minecraft-mcp/connection.json`。可用 `MINECRAFT_MCP_CONNECTION` 指定其他檔案；明確設定的 `MINECRAFT_MCP_PORT` 與 `MINECRAFT_MCP_TOKEN` 優先於檔案內容。若要完全透過環境變數設定連線，可直接執行 `src/server.mjs`。
+Codex 外掛與上述壓縮檔手動設定皆使用 `src/plugin.mjs`，預設讀取 `~/.config/minecraft-mcp/connection.json`。可用 `MINECRAFT_MCP_CONNECTION` 指定其他檔案；明確設定的 `MINECRAFT_MCP_PORT` 與 `MINECRAFT_MCP_TOKEN` 優先於檔案內容。若要完全透過環境變數設定連線，可直接執行 `src/server.mjs`。
 
 Minecraft 與 MCP server 必須在同一台電腦上執行。模組僅監聽 `127.0.0.1` 並要求 token；腳本具有 Minecraft 程序的權限，請連接你信任的 Agent。
 

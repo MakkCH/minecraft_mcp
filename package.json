@@ -1,9 +1,11 @@
 {
-  "name": "minecraft-mcp",
-  "version": "0.2.2",
-  "author": {"name": "Mak", "url": "https://github.com/MakkCH"},
+  "name": "@makkch/minecraft-mcp",
+  "version": "0.2.3",
+  "author": {
+    "name": "Mak",
+    "url": "https://github.com/MakkCH"
+  },
   "license": "MIT",
-  "private": true,
   "files": [
     "src",
     "skills",
@@ -13,7 +15,8 @@
     ".codex-plugin",
     ".mcp.json",
     "assets/icon.svg",
-    "assets/icon.png"
+    "assets/icon.png",
+    "server.json"
   ],
   "type": "module",
   "engines": {
@@ -30,8 +33,20 @@
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"
   },
-  "bundledDependencies": ["@modelcontextprotocol/sdk", "zod"],
+  "bundledDependencies": [
+    "@modelcontextprotocol/sdk",
+    "zod"
+  ],
   "bin": {
     "minecraft-mcp": "src/server.mjs"
+  },
+  "description": "Control a local Minecraft client with JsMacros scripts, screenshots and player takeover.",
+  "mcpName": "io.github.MakkCH/minecraft-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MakkCH/minecraft_mcp.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

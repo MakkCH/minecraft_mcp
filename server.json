@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.MakkCH/minecraft-mcp",
+  "description": "Control a local Minecraft client. Requires the Minecraft MCP mod and JsMacros Reloaded.",
+  "repository": {
+    "url": "https://github.com/MakkCH/minecraft_mcp",
+    "source": "github"
+  },
+  "version": "0.2.3",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@makkch/minecraft-mcp",
+      "version": "0.2.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MINECRAFT_MCP_TOKEN",
+          "description": "Token shown in the Minecraft MCP mod settings (F8).",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "MINECRAFT_MCP_PORT",
+          "description": "Port shown in the Minecraft MCP mod settings.",
+          "default": "28473",
+          "format": "number"
+        }
+      ]
+    }
+  ]
+}

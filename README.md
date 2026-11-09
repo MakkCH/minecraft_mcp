@@ -86,7 +86,27 @@ All three entrypoints open the same settings screen. Mod Menu is optional. The s
 
 ### 2. Install the agent package
 
-The archive includes the MCP server, its dependencies, the Skill and Codex plugin metadata. Extract it into a stable folder, then choose the setup for your agent below. The commands use macOS/Linux shell syntax; on Windows, use the equivalent folders under your user profile.
+For a standard MCP client, you can run the npm package with the configuration below. Set the token and port from step 1 in your client. This entrypoint uses environment variables and does not read `connection.json`. The package includes the Skill; MCP initialization instructions point the agent to its installed path.
+
+```json
+{
+  "mcpServers": {
+    "minecraft_mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@makkch/minecraft-mcp@0.2.3"
+      ],
+      "env": {
+        "MINECRAFT_MCP_TOKEN": "YOUR_TOKEN",
+        "MINECRAFT_MCP_PORT": "28473"
+      }
+    }
+  }
+}
+```
+
+Alternatively, the GitHub Release archive includes the MCP server, its dependencies, the Skill and Codex plugin metadata. Extract it into a stable folder, then choose the setup for your agent below. The commands use macOS/Linux shell syntax; on Windows, use the equivalent folders under your user profile.
 
 Replace the archive path with the `.tgz` you downloaded:
 
@@ -171,6 +191,8 @@ Also install the complete `skills/minecraft-mcp` folder using your client's Skil
 
 ### 3. Pair the agent with your game
 
+If you used the npm configuration above, pairing is already configured through `env`; skip the connection file below.
+
 Create `~/.config/minecraft-mcp/connection.json` (including its parent directory) with the values from the Minecraft settings screen. On Windows, `~` means your user profile directory, typically `C:\Users\YourName`.
 
 ```json
@@ -215,7 +237,7 @@ The mod adds no blocks, items, entities or world-generation changes. Removing it
 | Port already in use | Give each simultaneously running instance a different port |
 | Incompatible protocol | Update the mod and MCP plugin to compatible versions |
 
-The `src/plugin.mjs` entrypoint used by the Codex plugin and the manual setups above reads `~/.config/minecraft-mcp/connection.json`. Set `MINECRAFT_MCP_CONNECTION` to use a different file. Explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` values override the file's values. To configure the connection entirely through environment variables, launch `src/server.mjs` directly instead.
+The `src/plugin.mjs` entrypoint used by the Codex plugin and the archive-based manual setups above reads `~/.config/minecraft-mcp/connection.json`. Set `MINECRAFT_MCP_CONNECTION` to use a different file. Explicit `MINECRAFT_MCP_PORT` and `MINECRAFT_MCP_TOKEN` values override the file's values. To configure the connection entirely through environment variables, launch `src/server.mjs` directly instead.
 
 Minecraft and the MCP server must run on the same computer. The mod listens only on `127.0.0.1` and requires its token. Scripts run with the Minecraft process’s permissions, so connect agents you trust.
 
