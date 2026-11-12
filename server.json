@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.MakkCH/minecraft-mcp",
-  "description": "Control a local Minecraft client. Requires the Minecraft MCP mod and JsMacros Reloaded.",
+  "description": "Control a Minecraft client with the Minecraft MCP mod and JsMacros Reloaded.",
   "repository": {
     "url": "https://github.com/MakkCH/minecraft_mcp",
     "source": "github"
@@ -28,6 +28,11 @@
           "description": "Port shown in the Minecraft MCP mod settings.",
           "default": "28473",
           "format": "number"
+        },
+        {
+          "name": "MINECRAFT_MCP_URL",
+          "description": "Optional HTTP(S) game bridge base URL, including a proxy path prefix. Overrides MINECRAFT_MCP_PORT. The MCP process stays on the agent computer.",
+          "format": "string"
         }
       ]
     }

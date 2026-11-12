@@ -24,7 +24,7 @@ For drawings/commands created by a task, call `mcp.track(drawOrCommand)` so stop
 
 ## Scripts
 
-Ready-to-run inspection utilities live in `scripts/`. Pass their absolute paths to `execute(file=...)`.
+Ready-to-run inspection utilities live in `scripts/` on the agent computer. Pass their absolute paths to `execute(file=...)`; the local Node MCP server reads and forwards the contents to the game bridge. This works unchanged for a local or remote game.
 
 - [inspect.js](../scripts/inspect.js): player and installed mod inventory; requires a world.
 - [discover-mods.js](../scripts/discover-mods.js): mod inventory or one mod's version, source links and JAR paths.
@@ -37,4 +37,4 @@ Demonstrations live in `examples/`. Adapt workspace copies to the current world 
 - [baritone-goto.js](../examples/baritone-goto.js): choose a destination; requires Baritone and moves the real player.
 - [baritone-nearby.js](../examples/baritone-nearby.js): two-block navigation exercise for a disposable world with Baritone.
 
-Disconnect cancels old tasks and releases controls.
+Leaving or changing the Minecraft world cancels old tasks and releases controls. Disconnecting the MCP client does not stop game scripts; use `stop` or the player's `/mcp stop`.
