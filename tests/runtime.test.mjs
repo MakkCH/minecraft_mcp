@@ -1,10 +1,12 @@
-// Real JsMacros/GraalJS threading and loaded mod APIs. No simulated client.
+// Real JsMacros/GraalJS threading and loaded mod APIs.
 // Does not navigate, mine, change inventory or toggle the player's bridge state.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, cp, symlink, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -45,14 +47,13 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     const escaped = await execute({code:`console.log(${JSON.stringify(special)});`});
     assert.equal(escaped.output, special+'\n');
     assert.equal(escaped.error, null);
-    assert.equal(escaped.dropped_chars, 0);
     const invalidWait = '"\\invalid';
     const rejected = await fetch(`http://127.0.0.1:${process.env.MINECRAFT_MCP_PORT||28473}/output?task=${escaped.task}&wait_ms=${encodeURIComponent(invalidWait)}`, {
-      headers:{Authorization:`Bearer ${process.env.MINECRAFT_MCP_TOKEN}`,'X-Minecraft-Mcp-Protocol':'1'},
+      headers:{Authorization:`Bearer ${process.env.MINECRAFT_MCP_TOKEN}`},
       signal:AbortSignal.timeout(2000)
     });
-    assert.equal(rejected.status,500);
-    assert.ok((await rejected.json()).error.includes(invalidWait));
+    assert.equal(rejected.status,400);
+    assert.equal((await rejected.json()).error,'wait_ms must be an integer from 0 to 30000');
 
     // If the caller retains GraalJS's lock while waiting, Minecraft cannot enter
     // this callback. Check the actual render thread and immediate return value.
@@ -84,8 +85,7 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     const mods=JSON.parse(inventory.output);
     assert.ok(mods.some(m=>m.id==='jsmacros' && m.version));
     // Discover the actual JAR and official source metadata through Fabric.
-    const source=await readFile(root+'skills/minecraft-mcp/scripts/discover-mods.js','utf8');
-    const metadata=await execute({code:source.replace('const modId = null;',"const modId = 'jsmacros';")});
+    const metadata=await execute({file:root+'skills/minecraft-mcp/scripts/discover-mods.js',args:{modId:'jsmacros'}});
     assert.equal(metadata.error,null);
     const info=JSON.parse(metadata.output);
     assert.equal(info.id,'jsmacros');
@@ -112,4 +112,42 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     for(const task of tasks) await call('stop',{task});
     await client.close();
   }
+});
+
+// Launch real package copies with different release versions against the installed mod.
+test('real client: matching release line accepts patch differences and rejects major/minor differences', {timeout:15000}, async () => {
+  const folder = await mkdtemp(join(tmpdir(), 'minecraft-mcp-version-'));
+  try {
+    await cp(root+'src', join(folder, 'src'), {recursive:true});
+    await symlink(root+'node_modules', join(folder, 'node_modules'), 'dir');
+    const pkg = JSON.parse(await readFile(root+'package.json', 'utf8'));
+    const [major, minor, patch] = pkg.version.split('.').map(Number);
+    for (const [version, compatible] of [
+      [`${major}.${minor}.${patch+1}`, true],
+      [`${major}.${minor+1}.0`, false],
+      [`${major+1}.${minor}.0`, false]
+    ]) {
+      await writeFile(join(folder, 'package.json'), JSON.stringify({...pkg, version}));
+      const client = new Client({name:'minecraft-mcp-version-check', version:'1'});
+      try {
+        await client.connect(new StdioClientTransport({
+          command:process.execPath, args:[join(folder, 'src/server.mjs')],
+          env:Object.fromEntries(['MINECRAFT_MCP_PORT','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),
+          stderr:'pipe'
+        }));
+        assert.equal(client.getServerVersion().version, version);
+        const response = await client.callTool({name:'execute', arguments:{code:'console.log(mcp.args.value);', args:{value:'compatible'}}});
+        if (compatible) {
+          assert.notEqual(response.isError, true, JSON.stringify(response));
+          const result = JSON.parse(response.content[0].text);
+          assert.equal(result.error, null);
+          assert.equal(result.output, 'compatible\n');
+        } else {
+          assert.equal(response.isError, true);
+          assert.match(response.content[0].text, /Incompatible Minecraft MCP versions/);
+          assert.ok(response.content[0].text.includes(`MCP server ${version}`));
+        }
+      } finally { await client.close(); }
+    }
+  } finally { await rm(folder, {recursive:true, force:true}); }
 });

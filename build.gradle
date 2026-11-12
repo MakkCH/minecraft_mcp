@@ -32,6 +32,7 @@ dependencies {
     implementation fabricApi.module('fabric-lifecycle-events-v1', profile.fabricApi)
     implementation fabricApi.module('fabric-command-api-v2', profile.fabricApi)
     implementation fabricApi.module('fabric-key-mapping-api-v1', profile.fabricApi)
+    implementation fabricApi.module('fabric-networking-api-v1', profile.fabricApi)
     compileOnly "xyz.wagyourtail:jsmacros-${mcProfile}:${jsmacros_version}"
     runtimeOnly "xyz.wagyourtail:jsmacros-${mcProfile}:${jsmacros_version}"
     // Available in the development client, but not bundled or required by the mod.
@@ -53,8 +54,6 @@ processResources {
 tasks.withType(Jar).configureEach { from('LICENSE') }
 tasks.withType(JavaCompile).configureEach { options.release = 25 }
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
     withSourcesJar()
 }
 

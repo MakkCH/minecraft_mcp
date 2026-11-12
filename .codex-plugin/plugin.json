@@ -10,7 +10,7 @@
   "interface": {
     "displayName": "Minecraft MCP",
     "shortDescription": "Play and inspect your Minecraft client",
-    "longDescription": "Connect to the Minecraft MCP client mod through a local stdio MCP server. Run JsMacros scripts, read output, capture the game view and report progress. The player can take over with /mcp stop. Requires Node.js 22+ alongside the agent and Minecraft with the companion mod and JsMacros on a reachable computer. Configure the bridge URL/port and token in the agent MCP environment. Baritone is optional.",
+    "longDescription": "Connect to the Minecraft MCP client mod through a local stdio MCP server. Run JsMacros scripts, read output, capture the game view and report progress. The player can take over with /mcp stop. Requires Node.js 22+ and Minecraft with the companion mod and JsMacros. Running them on the same computer as your agent is recommended. Configure the port and token in the agent MCP environment. Baritone is optional.",
     "developerName": "Mak",
     "category": "Productivity",
     "capabilities": ["Read", "Write"],

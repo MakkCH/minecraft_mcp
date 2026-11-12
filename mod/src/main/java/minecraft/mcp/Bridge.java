@@ -2,7 +2,6 @@ package minecraft.mcp;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
 import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -17,17 +16,17 @@ import java.util.concurrent.*;
 public final class Bridge implements AutoCloseable {
     private static final Gson JSON = new GsonBuilder().serializeNulls().create();
     private final HttpServer server;
+    private final String version;
     private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
     private final BlockingQueue<Request> requests = new ArrayBlockingQueue<>(64);
     private final Map<String, Job> jobs = new LinkedHashMap<>();
     private volatile byte[] token;
     private volatile boolean enabled;
-    private final int outputLimit;
 
-    public Bridge(String host, int port, String token, boolean enabled, int outputLimit) throws IOException {
+    public Bridge(String host, int port, String token, boolean enabled, String version) throws IOException {
+        this.version = version;
         setToken(token);
         this.enabled = enabled;
-        this.outputLimit = Math.clamp(outputLimit, 4096, 1048576);
         server = HttpServer.create(new InetSocketAddress(host, port), 16);
         server.setExecutor(workers);
         server.createContext("/", this::handle);
@@ -45,10 +44,13 @@ public final class Bridge implements AutoCloseable {
         return null;
     }
     public synchronized Job createJob() {
-        // Evict only finished tasks; never silently lose control of a running context.
-        if (jobs.size() >= 128) jobs.values().removeIf(j -> !j.isLive());
-        if (jobs.size() >= 128) throw new IllegalStateException("Too many active scripts; stop some first");
-        Job job = new Job(UUID.randomUUID().toString(), outputLimit);
+        // Reclaim only the oldest consumed result, preserving unread output and errors.
+        if (jobs.size() >= 128) {
+            var iterator = jobs.values().iterator();
+            while (iterator.hasNext()) if (iterator.next().discard()) { iterator.remove(); break; }
+        }
+        if (jobs.size() >= 128) throw new IllegalStateException("Task limit reached; stop active scripts and read their final output");
+        Job job = new Job(UUID.randomUUID().toString());
         jobs.put(job.id, job);
         return job;
     }
@@ -62,16 +64,16 @@ public final class Bridge implements AutoCloseable {
             if (x.getRequestHeaders().containsKey("Origin")) { send(x, 403, error("Browser requests are not accepted")); return; }
             String path = x.getRequestURI().getPath();
             if (path.equals("/status") && x.getRequestMethod().equals("GET")) {
-                send(x, 200, Map.of("protocol", 1, "enabled", enabled)); return;
-            }
-            if (!"1".equals(x.getRequestHeaders().getFirst("X-Minecraft-Mcp-Protocol"))) {
-                send(x, 426, error("Incompatible MCP protocol; update the MCP server")); return;
+                send(x, 200, Map.of("version", version, "enabled", enabled)); return;
             }
             if (path.equals("/output") && x.getRequestMethod().equals("GET")) {
                 Map<String,String> q = query(x.getRequestURI().getRawQuery());
                 Job job = getJob(q.get("task"));
                 if (job == null) { send(x, 404, error("Unknown or expired task")); return; }
-                int wait = Math.clamp(Integer.parseInt(q.getOrDefault("wait_ms", "0")), 0, 10000);
+                int wait;
+                try { wait = Integer.parseInt(q.getOrDefault("wait_ms", "0")); }
+                catch (NumberFormatException e) { send(x, 400, error("wait_ms must be an integer from 0 to 30000")); return; }
+                if (wait < 0 || wait > 30000) { send(x, 400, error("wait_ms must be an integer from 0 to 30000")); return; }
                 send(x, 200, job.read(wait, Boolean.parseBoolean(q.getOrDefault("wait_for_completion", "false"))));
             } else if (path.equals("/command") && x.getRequestMethod().equals("POST")) {
                 byte[] bytes = x.getRequestBody().readNBytes(1048577);
@@ -117,31 +119,59 @@ public final class Bridge implements AutoCloseable {
     }
     public static final class Job {
         public final String id;
-        private final int limit;
-        private final StringBuilder output = new StringBuilder();
+        private static final int OUTPUT_LIMIT = 65536;
+        private final byte[] output = new byte[OUTPUT_LIMIT];
+        private int outputHead, outputSize;
         private long dropped;
-        private boolean mainDone, stopped;
+        private boolean mainDone, stopped, terminalRead;
         private String error;
         private BaseScriptContext<?> context;
         private final List<Object> tracked = new ArrayList<>();
-        Job(String id, int limit) { this.id = id; this.limit = limit; }
+        Job(String id) { this.id = id; }
+        private synchronized boolean discard() {
+            return terminalRead && outputSize == 0 && !isLive() && (context == null || context.isContextClosed());
+        }
         public synchronized void attach(BaseScriptContext<?> context) { this.context = context; }
         public synchronized BaseScriptContext<?> getContext() { return context; }
         public synchronized void write(String text) {
-            output.append(text).append('\n');
-            if (output.length() > limit) {
-                int remove = output.length() - limit;
-                if (remove < output.length() && Character.isLowSurrogate(output.charAt(remove))) remove++;
-                output.delete(0, remove); dropped += remove;
+            byte[] incoming = (text + '\n').getBytes(StandardCharsets.UTF_8);
+            int start = Math.max(0, incoming.length - OUTPUT_LIMIT);
+            while (start < incoming.length && (incoming[start] & 0xC0) == 0x80) start++;
+            if (start > 0) {
+                dropped += outputSize + start; outputHead = outputSize = 0;
+            } else {
+                int remove = Math.max(0, outputSize + incoming.length - OUTPUT_LIMIT);
+                outputHead = (outputHead + remove) % OUTPUT_LIMIT;
+                outputSize -= remove; dropped += remove;
+                // Discard the rest of a partial UTF-8 character without moving retained bytes.
+                while (outputSize > 0 && (output[outputHead] & 0xC0) == 0x80) {
+                    outputHead = (outputHead + 1) % OUTPUT_LIMIT; outputSize--; dropped++;
+                }
             }
+            int count = incoming.length - start;
+            int tail = (outputHead + outputSize) % OUTPUT_LIMIT;
+            int first = Math.min(count, OUTPUT_LIMIT - tail);
+            System.arraycopy(incoming, start, output, tail, first);
+            System.arraycopy(incoming, start + first, output, 0, count - first);
+            outputSize += count;
             notifyAll();
         }
-        public synchronized void finish(String error) { this.error = error; mainDone = true; notifyAll(); }
+        private static String truncation(long bytes) { return "[ …" + bytes + " bytes truncated… ]"; }
+        public synchronized void finish(String error) {
+            if (error != null) {
+                byte[] bytes = error.getBytes(StandardCharsets.UTF_8);
+                int keep = Math.min(bytes.length, 262144);
+                while (keep < bytes.length && (bytes[keep] & 0xC0) == 0x80) keep--;
+                error = new String(bytes, 0, keep, StandardCharsets.UTF_8)
+                    + (keep < bytes.length ? "\n" + truncation(bytes.length - keep) : "");
+            }
+            this.error = error; mainDone = true; terminalRead = false; notifyAll();
+        }
         public synchronized void track(Object obj) { tracked.add(obj); }
         public synchronized void stopped(boolean cancelled) {
             for (Object obj : tracked) try { obj.getClass().getMethod("unregister").invoke(obj); }
             catch (ReflectiveOperationException e) { write("[cleanup] " + e); }
-            tracked.clear(); stopped |= cancelled; notifyAll();
+            tracked.clear(); stopped |= cancelled; terminalRead &= !cancelled; notifyAll();
         }
         public synchronized String status() {
             if (stopped) return "stopped";
@@ -153,20 +183,25 @@ public final class Bridge implements AutoCloseable {
         public synchronized boolean isLive() {
             return switch (status()) { case "running", "active" -> true; default -> false; };
         }
-        public record Output(String task, String status, String output,
-                             @SerializedName("dropped_chars") long droppedChars, String error) { }
+        public record Output(String task, String status, String error, String output) { }
         public synchronized Output read(int waitMs, boolean waitForCompletion) throws InterruptedException {
             long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMs);
             // execute waits for the script body; read_output streams as soon as output arrives.
             // Native callbacks may keep a finished body active indefinitely.
             while (waitForCompletion ? status().equals("running")
-                    : output.isEmpty() && isLive()) {
+                    : outputSize == 0 && isLive()) {
                 long left = deadline - System.nanoTime();
                 if (left <= 0) break;
                 TimeUnit.NANOSECONDS.timedWait(this, left);
             }
-            Output result = new Output(id, status(), output.toString(), dropped, error);
-            output.setLength(0); dropped = 0;
+            byte[] bytes = new byte[outputSize];
+            int first = Math.min(outputSize, OUTPUT_LIMIT - outputHead);
+            System.arraycopy(output, outputHead, bytes, 0, first);
+            System.arraycopy(output, 0, bytes, first, outputSize - first);
+            Output result = new Output(id, status(), error,
+                (dropped > 0 ? truncation(dropped) + "\n" : "") + new String(bytes, StandardCharsets.UTF_8));
+            terminalRead = !isLive();
+            outputHead = outputSize = 0; dropped = 0;
             return result;
         }
     }

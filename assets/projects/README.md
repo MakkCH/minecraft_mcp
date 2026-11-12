@@ -2,7 +2,7 @@
 
 [Back to Minecraft MCP](../../README.md)
 
-Each project has its own write-up, screenshots and, where available, downloadable builds. These are examples of what agents have made with Minecraft MCP; each write-up describes its setup and available downloads.
+Agent projects with write-ups, screenshots and downloadable builds where available.
 
 | Project | Date | Result |
 | --- | --- | --- |

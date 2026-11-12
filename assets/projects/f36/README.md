@@ -4,17 +4,15 @@
 
 A single-item 6× loader that fits in 3×3×4 including piston movement. Carted modules tile every three blocks at the same height. [HaJiYue (真-哈基月)’s 3×4×4 loader (BV1qP4y1G7mz)](https://www.bilibili.com/video/BV1qP4y1G7mz/) served only as a size comparison baseline: F36 has 25% less bounding volume and is not a modification of that design.
 
-GPT-6 Astra developed the design in Minecraft Java 26.3 through Minecraft MCP; I set the requirements and reviewed the prototypes. The finished machine uses vanilla mechanics.
+GPT-6 Astra developed the design in Minecraft Java 26.3 through Minecraft MCP; Mak set the requirements and reviewed the prototypes. The finished machine uses vanilla mechanics.
 
 ![The cartless F36 core in Minecraft](images/cartless-core.png)
 
 *The standalone cartless core. The waterway and external storage are outside the 3×3×4 core.*
 
-[Watch the F36 video on Bilibili](https://www.bilibili.com/video/BV1JBW76CEM5/).
-
 ## Download the schematics
 
-The schematics were exported from Minecraft Java 26.3 on November 8, 2026. All dimensions below use X × Y × Z (width × height × depth). The array is 16 blocks wide, 4 high and 5 deep.
+The schematics were exported from Minecraft Java 26.3 on November 8, 2026. All dimensions below use X × Y × Z (width × height × depth).
 
 | Download | Dimensions | Use |
 | --- | --- | --- |
@@ -22,9 +20,9 @@ The schematics were exported from Minecraft Java 26.3 on November 8, 2026. All d
 | [F36-carted-single-core.litematic](schematics/F36-carted-single-core.litematic?raw=true) | 3 × 3 × 4 | One core with its hopper minecart; use this variant when tiling. Supply and storage are external. |
 | [F36-cartless-single-core.litematic](schematics/F36-cartless-single-core.litematic?raw=true) | 3 × 3 × 4 | One standalone core without a minecart, for use on its own. |
 
-[SHA-256 checksums](schematics/SHA256SUMS). Download a schematic and try it in your own setup; [reports and suggestions](https://github.com/MakkCH/minecraft_mcp/issues) are welcome.
+[SHA-256 checksums](schematics/SHA256SUMS). [Report a problem](https://github.com/MakkCH/minecraft_mcp/issues).
 
-The files include block states, inventories and minecarts. When pasting a carted schematic, include entities and preserve their NBT. For a survival build, follow the minecart placement shown in the [F36 video](https://www.bilibili.com/video/BV1JBW76CEM5/); Litematica’s block overlay covers only the blocks.
+The files include block states, inventories and minecarts. When pasting a carted schematic, include entities and preserve their NBT. For a survival build, follow the minecart placement in [Build and use](#build-and-use); Litematica’s block overlay covers only the blocks.
 
 ## What the design does
 

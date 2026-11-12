@@ -1,5 +1,4 @@
 // Requires the real configured Minecraft client in a disposable local world.
-// No mock transports, substituted game APIs or fake task runners.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -51,16 +50,17 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     const syntax=await json('execute',{code:'const = ;',wait_ms:1000});
     assert.equal(syntax.status,'error');
     // Real Baritone pathfinding must move the actual player to the requested goal.
-    const nav=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/baritone-nearby.js',wait_ms:0}), r=>r.output.includes('NAVIGATION=') || r.status==='error');
+    const nav=await collect(await json('execute',{file:root+'tests/baritone-nearby.js',wait_ms:0}));
     await call('stop',{task:nav.task});
-    const movement=JSON.parse(nav.output.trim().split('NAVIGATION=').at(-1));
+    const movement=JSON.parse(nav.output);
     assert.equal(movement.reached,true,JSON.stringify(movement));
     assert.ok(Math.hypot(movement.end.x-movement.start.x,movement.end.z-movement.start.z)>1);
-    // Check real renderer registration and teardown, not a simulated resource list.
+    // Check renderer registration and teardown.
     const drawCount=async () => Number((await collect(await json('execute',{code:'console.log(Hud.listDraw3Ds().size());'}))).output.trim());
     const beforeDraw=await drawCount();
     const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/marker.js'}));
-    assert.match(marker.output,/MARKER_REGISTERED/);
+    assert.equal(marker.error,null);
+    assert.ok(Number.isFinite(JSON.parse(marker.output).position.x));
     assert.equal(await drawCount(),beforeDraw+1);
     const marked=await call('screenshot');
     assert.ok(marked.content.some(c=>c.type==='image'));

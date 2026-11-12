@@ -1,3 +1,4 @@
+Error.stackTraceLimit = 100;
 const __mcpJob = event.getObject('job');
 function __mcpFormat(x) {
   if (typeof x === 'string') return x;
@@ -9,6 +10,7 @@ globalThis.console = Object.freeze(Object.fromEntries(['log','info','warn','erro
 globalThis.print = (...args) => console.log(...args);
 // Track native Draw2D/Draw3D/CommandBuilder registrations for stop cleanup.
 globalThis.mcp = Object.freeze({
+  args: JSON.parse(event.getString('args')),
   track: obj => { __mcpJob.track(obj); return obj; },
   mainThread: fn => {
     if (typeof fn !== 'function') throw new TypeError('mcp.mainThread expects a function');

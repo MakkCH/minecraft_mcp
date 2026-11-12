@@ -54,8 +54,6 @@ test('real mod: auth, settings entrypoints and UI token rotation', {timeout:2000
   assert.ok(token,'Set MINECRAFT_MCP_TOKEN');
   assert.equal((await status(token)).status,200);
   assert.equal((await status('wrong-token')).status,401);
-  const legacy=await fetch(url+'/command',{method:'POST',headers:{Authorization:`Bearer ${token}`},body:JSON.stringify({op:'execute',code:'throw new Error("must not run")'})});
-  assert.equal(legacy.status,426);
   const oldClient=await clientFor(token), next=randomBytes(32).toString('hex');
   let newClient;
   try {

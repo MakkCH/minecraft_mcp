@@ -1,5 +1,5 @@
-// Read-only inventory. Set modId to inspect one mod's metadata and local JAR paths.
-const modId = null;
+// Pass args.modId to inspect one mod's metadata and local JAR paths.
+const modId = mcp.args.modId ?? null;
 if (modId === null) {
   console.log(Java.from(Client.getLoadedMods()).map(m => ({
     id: String(m.getId()), name: String(m.getName()), version: String(m.getVersion())

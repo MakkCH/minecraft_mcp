@@ -8,11 +8,9 @@ function port(value, name) {
 export function readConfig(env = process.env) {
   let url;
   if (env.MINECRAFT_MCP_URL !== undefined) {
-    try {
-      url = new URL(env.MINECRAFT_MCP_URL);
-      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error();
-    } catch {
-      // Never echo a malformed URL: it may contain credentials.
+    // Never echo a malformed URL: it may contain credentials.
+    url = URL.canParse(env.MINECRAFT_MCP_URL) ? new URL(env.MINECRAFT_MCP_URL) : null;
+    if (!url || !['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
       throw new Error('MINECRAFT_MCP_URL must be an http(s) base URL without credentials, query or fragment');
     }
   } else {

@@ -1,13 +1,14 @@
 JsMacros Reloaded 2.2.1 — compact signature index
-Checked against the 26.1 (26.1/26.1.1/26.1.2), 26.2 and 26.3 source profiles.
-The listed outer-class public declarations match across all three profiles.
-This is a source comparison, not a client-mod compatibility or runtime guarantee.
-Search with rg. Java types describe GraalJS interop; JavaWrapper converts callbacks.
+Eight classes, checked against the 26.1 (26.1/26.1.1/26.1.2), 26.2 and 26.3 source profiles.
+The listed outer-class public declarations match across those profiles.
+Globals map to classes: Player → FPlayer, World → FWorld, Hud → FHud,
+Client → FClient, Chat → FChat, KeyBind → FKeyBind, JsMacros → FJsMacros.
+ServiceManager is also indexed. Search signatures with rg.
+Helper methods such as getX(), getYaw() and addBox(), plus JavaWrapper, are outside
+this index. Follow the return type into the versioned source or inspect the installed
+JAR with javap (see mods.md). Source Javadocs describe semantics and threading.
 Links below use the effective 26.3 sources. Other profile overrides are under:
 https://github.com/grepsedawk/JsMacros/tree/v2.2.1/src/versions
-This covers eight JsMacros classes, not all helpers or Minecraft's native API.
-For example, 26.3 changes brewing/fuel helper behavior; consult versioned source.
-Source Javadocs contain detailed semantics. Do not treat this as Node.js.
 
 FPlayer.java
 https://github.com/grepsedawk/JsMacros/blob/v2.2.1/src/versions/26.3/client/java/xyz/wagyourtail/jsmacros/client/api/library/impl/FPlayer.java

@@ -9,7 +9,7 @@ try {
     help:{type:'boolean', short:'h'}
   }});
   if (values.help) {
-    console.log(`Minecraft MCP — local stdio server for a local or remote game bridge
+    console.log(`Minecraft MCP — control your local Minecraft client over stdio
 
 Usage: minecraft-mcp [--help]
 
@@ -17,9 +17,10 @@ MINECRAFT_MCP_TOKEN       Token from the Minecraft mod settings (F8)
 MINECRAFT_MCP_PORT        Local mod port (default: 28473)
 MINECRAFT_MCP_URL         Bridge base URL; overrides the local mod port
 
-Run this process alongside your agent. execute(file=...) reads files here
-and sends their contents to the game bridge. Enable Allow remote in F8
-for direct network access, or use a tunnel to the default loopback listener.`);
+Recommended: run the agent, MCP server and Minecraft on the same computer.
+execute({file: "build.js"}) resolves paths from the MCP working directory.
+MINECRAFT_MCP_URL optionally connects to a remote game; script dependencies
+and filesystem access still use the game computer.`);
   } else {
     await createMcpServer(readConfig()).connect(new StdioServerTransport());
   }

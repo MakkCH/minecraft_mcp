@@ -31,11 +31,13 @@ Everything here was done by an agent through Minecraft MCP. [Browse all projects
     <td width="50%" valign="top">
       <a href="assets/projects/f36/README.md"><img src="assets/projects/f36/images/cartless-core.png" alt="The F36 cartless loader core" /></a>
       <h3>F36: a compact 6× shulker box loader</h3>
-      <p>A 3×3×4 single-item shulker box loader designed by GPT-6 Astra. Modules with minecarts tile every three blocks at the same height; a single module runs without one. <a href="https://www.bilibili.com/video/BV1qP4y1G7mz/">HaJiYue (真-哈基月)’s 3×4×4 loader</a> is only a size comparison; F36 is not based on it.</p>
+      <p>A 3×3×4 single-item shulker box loader designed by GPT-6 Astra. Modules with minecarts tile every three blocks at the same height; a single module runs without one.</p>
       <p>Schematics exported from Java 26.3. <a href="https://www.bilibili.com/video/BV1JBW76CEM5/">Watch the video</a> · <a href="assets/projects/f36/README.md">Download the schematics</a></p>
     </td>
   </tr>
 </table>
+
+The banner scene was built and captured in Minecraft by GPT-6 Astra using Minecraft MCP.
 
 ## Requirements
 
@@ -52,7 +54,7 @@ Fabric only for now. Forge, NeoForge and other Minecraft versions are not suppor
 | Fabric Loader | 0.19.5 or later |
 | Java | 25 or later |
 | JsMacros Reloaded | 2.2.1, same JAR group as above (bundles the Fabric API modules this mod needs) |
-| Node.js | 22 or later, on the computer that runs the agent |
+| Node.js | 22+ for the MCP server; 22.20+ for [Skills CLI](https://github.com/vercel-labs/skills) |
 | Agent | Codex, Claude Code, Claude Desktop, Cursor, or any client with stdio MCP support |
 | Baritone | Optional, strongly recommended |
 
@@ -68,7 +70,7 @@ There are three things to install:
 | **Skill** | Agent | Teaches the agent how to write scripts and which APIs exist |
 | **MCP server** | Agent | Exposes the game as tools the agent can call |
 
-If the agent and the game are on different computers, the Skill and MCP server still go on the agent's computer. See [Remote connection](#remote-connection).
+We recommend running the agent, MCP server and Minecraft on the same computer.
 
 ### 1. Install the mod
 
@@ -100,7 +102,7 @@ npx skills add MakkCH/minecraft_mcp --skill minecraft-mcp -g
 
 Pick your agent when prompted, or name it directly with `-a codex`, `-a claude-code` or `-a cursor`. `-g` installs for your user so every project can use it; leave it out to install for the current project only.
 
-The [Skills CLI](https://github.com/vercel-labs/skills) needs Node.js 22.20 or later. If your client has no Skill support, give the agent [SKILL.md](skills/minecraft-mcp/SKILL.md) as instructions and make sure it can read the files that document refers to.
+If your client has no Skill support, give the agent [SKILL.md](skills/minecraft-mcp/SKILL.md) as instructions and make sure it can read the files that document refers to.
 
 ### 3. Add the MCP server
 
@@ -194,7 +196,7 @@ If nothing happens, see [Connection help](#connection-help).
 
 **Codex plugin**: still available and includes the Skill, but not recommended for new installations. Use the standalone setup above to configure the token and port for each game instance ([Codex MCP settings](https://developers.openai.com/codex/mcp#plugin-provided-mcp-servers)). See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins).
 
-If you already use the plugin and want to switch to the standalone setup above, disable the plugin's bundled MCP server first and keep only one copy of the Skill.
+If you already use the plugin and want to switch to the standalone setup above, disable the plugin before enabling the standalone MCP server and Skill.
 
 </details>
 
@@ -208,7 +210,7 @@ If you already use the plugin and want to switch to the standalone setup above, 
 | `/mcp config` or F8 | Open the settings screen |
 
 - While disabled, the agent can still take screenshots but cannot act.
-- Leaving or switching worlds cancels running tasks.
+- Disconnecting from a server or leaving a singleplayer world cancels running tasks. Changing dimensions does not.
 - `[AGENT]` messages appear only in your own chat. They are not sent to multiplayer servers.
 - The mod interface is in English.
 
@@ -216,76 +218,26 @@ The mod adds no blocks, items or entities, so removing it needs no changes to yo
 
 ## Remote connection
 
-The agent and the game can run on different computers. The MCP server and Skill stay with the agent and reach the mod on the game computer over the network:
+<details>
+<summary>Optional: connect to a game on another computer</summary>
 
-```mermaid
-flowchart LR
-  subgraph agentComputer["Agent computer"]
-    direction TB
-    agent["MCP client + Skill<br/>Codex / Claude Code / Cursor"]
-    node["Node.js MCP server<br/>Reads local scripts"]
-    agent <-->|"stdio"| node
-  end
-  subgraph gameComputer["Game computer"]
-    direction TB
-    bridge["Mod bridge · F8 settings<br/>Local only / Allow remote"]
-    game["Minecraft client<br/>JsMacros + installed mods"]
-    bridge <-->|"Execute / results"| game
-  end
-  agentComputer <-->|"HTTP(S) · F8 token<br/>Game IP / tunnel / proxy"| gameComputer
-```
+Script contents can be sent to another computer, but `require()` and other file access use the game computer's filesystem. Use self-contained scripts or prepare dependencies on the game computer yourself.
 
-Custom addresses require MCP server 0.4.0 or later. Allow remote requires mod 0.4.0 or later.
+1. Enable **Allow remote** in the game's F8 settings and press Apply. Allow the game port through its firewall.
+2. In your agent's MCP configuration, replace `MINECRAFT_MCP_PORT` with `MINECRAFT_MCP_URL`, such as `http://192.168.1.20:28473/`.
+3. Use the token from the game's F8 screen, then restart the MCP connection.
 
-### 1. Make the game reachable from the agent computer
-
-Pick one of three ways:
-
-**Direct connection**: turn on **Allow remote** in the F8 settings and press Apply. The mod starts accepting connections from other computers. The agent connects to `http://GAME_COMPUTER_IP:28473/`. Open that port in the firewall.
-
-**SSH tunnel**: leave Allow remote off. Run this on the agent computer and keep it running. The agent connects to `http://127.0.0.1:38473/`.
+Alternatively, leave Allow remote off and use an SSH tunnel:
 
 ```sh
 ssh -N -L 38473:127.0.0.1:28473 user@game-host
 ```
 
-**HTTPS reverse proxy**: forward a URL prefix to the mod's `/status`, `/command` and `/output` routes, and preserve the `Authorization` header.
+Set the URL to `http://127.0.0.1:38473/`. `MINECRAFT_MCP_URL` also accepts HTTPS, IPv6, custom ports and proxy path prefixes.
 
-### 2. Put the address in your MCP configuration
+Scripts run with the full permissions of the Minecraft process. Connect only trusted agents; use SSH or HTTPS across untrusted networks to protect the token and script contents. Custom addresses and Allow remote require 0.4.0 or later.
 
-In the configuration from [Installation](#3-add-the-mcp-server), replace `MINECRAFT_MCP_PORT` with `MINECRAFT_MCP_URL`. For Codex:
-
-```toml
-[mcp_servers.minecraft_mcp]
-command = "npx"
-args = ["-y", "@makkch/minecraft-mcp@latest"]
-
-[mcp_servers.minecraft_mcp.env]
-MINECRAFT_MCP_URL = "http://GAME_COMPUTER_IP:28473/"
-MINECRAFT_MCP_TOKEN = "YOUR_TOKEN"
-```
-
-Replace the example URL with your game address, SSH tunnel address or HTTPS proxy URL. Other clients take the same environment variables. Restart the MCP connection afterwards.
-
-| Variable | Meaning |
-| --- | --- |
-| `MINECRAFT_MCP_TOKEN` | The token from the F8 screen. Required |
-| `MINECRAFT_MCP_PORT` | Port for a game on the same computer. Default `28473` |
-| `MINECRAFT_MCP_URL` | Full bridge address. Replaces the port when set |
-
-`MINECRAFT_MCP_URL` accepts HTTP or HTTPS, hostnames, IP addresses (including IPv6), custom ports and path prefixes, for example `https://game-host.example/bridge/` or `http://[::1]:38473/`. It must not contain credentials, a query or a fragment, and redirects are not followed. `node src/server.mjs --help` prints a summary.
-
-### Security
-
-- **Scripts run with the full permissions of the Minecraft process.** Only connect agents you trust.
-- The token is the only authentication. Plain HTTP encrypts neither the token nor the scripts, so use an SSH tunnel or HTTPS across networks you do not trust.
-- With Allow remote on, the token is still required and requests with an `Origin` header are rejected.
-
-### Behavior
-
-- Disconnecting MCP does not stop scripts in the game. Use the `stop` tool or `/mcp stop`.
-- Several agents connected to the same game share one player and one set of tasks. Have only one of them read each task's output.
-- `execute(file=...)` reads the file on the agent computer and sends its contents to the game.
+</details>
 
 ## Connection help
 
@@ -296,7 +248,7 @@ Replace the example URL with your game address, SSH tunnel address or HTTPS prox
 | Agent control disabled | Type `/mcp start` in the game |
 | Agent cannot find the tools | Check that the MCP server is enabled and Node.js is installed, then start a new chat |
 | Port already in use | When running several game instances, give each a different port in F8 |
-| Incompatible protocol | Update the mod and MCP server to [compatible versions](#versions-and-compatibility) |
+| Incompatible Minecraft MCP versions | Update the mod and MCP server to [compatible versions](#versions-and-compatibility) |
 | Remote connection refused / 404 | Check in order: Allow remote, IP and port, firewall, tunnel or proxy, URL prefix |
 
 ## Updating
@@ -309,7 +261,7 @@ Replace the example URL with your game address, SSH tunnel address or HTTPS prox
 | Archive | Replace the extracted folder and restart the MCP connection |
 | Codex plugin | Update from the source you installed it from, then start a new chat |
 
-Updating does not touch your settings in the game or in the agent client. Before updating the MCP server, check that the new version is compatible with your mod.
+Updating does not touch your settings in the game or in the agent client. Update the MCP server and installed Skill together. Check that the MCP server is compatible with your mod.
 
 ## Versions and compatibility
 
@@ -318,7 +270,7 @@ The mod and the agent package (MCP server, Skill, Codex plugin) share the first 
 - **Same first two parts means compatible.** Mod 0.4.2 works with MCP server 0.4.0.
 - When the interface between the two changes, both move to the next minor version together.
 
-Other release lines can also connect if they use bridge protocol `1`.
+The MCP server checks the mod version when connecting. Different major or minor versions are rejected before game actions run.
 
 ## Development
 
@@ -362,23 +314,18 @@ The package contains the MCP server, its dependencies, the Skill, plugin metadat
 | Command | Checks | Needs |
 | --- | --- | --- |
 | [`npm test`](tests/protocol.test.mjs) | MCP negotiation, tool list, argument validation | Nothing |
+| [`npm run test:execute`](tests/execute.test.mjs) | Arguments, local files, diagnostics, 30-second waits | A local running game |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | Script execution, game-thread callbacks, mod discovery, screenshots | A running game |
 | [`npm run test:mod`](tests/mod.test.mjs) | Settings screen, token change and authentication, Mod Menu entry (if installed) | A running game |
 | [`npm run test:live`](tests/live.test.mjs) | Movement, Baritone navigation, output, cancellation, markers, player takeover | A running game, Baritone, a loaded world |
 
-The last three connect to a Minecraft client set aside for testing and take its port and token from environment variables. To start one:
+The game tests connect to a Minecraft client set aside for testing and take its port and token from environment variables. To start one:
 
 ```sh
 ./gradlew runClient -PmcProfile=26.1 -PmcpRunDir=/absolute/test-instance
 ```
 
 Without `-PmcpRunDir`, the run directory is created in the system temporary folder, one per version. When running several test clients, give each its own port and token.
-
-### Notes
-
-- The five MCP tools are `execute`, `read_output`, `stop`, `screenshot` and `chat`.
-- Every `execute` runs in a new JsMacros context. A script can keep running and keep producing output, but top-level variables do not carry over to the next call.
-- The banner scene was built and captured in Minecraft by GPT-6 Astra using Minecraft MCP.
 
 [Skill](skills/minecraft-mcp/SKILL.md) · [API index](skills/minecraft-mcp/references/api-index.txt) · [Mod discovery](skills/minecraft-mcp/references/mods.md) · [Script utilities](skills/minecraft-mcp/scripts) · [Examples](skills/minecraft-mcp/examples)
 

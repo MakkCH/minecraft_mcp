@@ -27,7 +27,8 @@
     "test": "node --test tests/protocol.test.mjs",
     "test:runtime": "node --test tests/runtime.test.mjs",
     "test:mod": "node --test tests/mod.test.mjs",
-    "test:live": "node --test tests/live.test.mjs"
+    "test:live": "node --test tests/live.test.mjs",
+    "test:execute": "node --test tests/execute.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
@@ -40,7 +41,7 @@
   "bin": {
     "minecraft-mcp": "src/server.mjs"
   },
-  "description": "Run MCP alongside your agent to control a local or remote Minecraft game bridge.",
+  "description": "Let your coding agent control your Minecraft client.",
   "mcpName": "io.github.MakkCH/minecraft-mcp",
   "repository": {
     "type": "git",

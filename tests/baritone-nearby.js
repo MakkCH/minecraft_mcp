@@ -13,4 +13,4 @@ for (let i = 0; i < 200; i++) {
   Client.waitTick();
 }
 const end = Player.getPlayer();
-console.log('NAVIGATION=' + JSON.stringify({start, end:{x:end.getX(), y:end.getY(), z:end.getZ()}, reached}));
+console.log({start, end:{x:end.getX(), y:end.getY(), z:end.getZ()}, reached});
