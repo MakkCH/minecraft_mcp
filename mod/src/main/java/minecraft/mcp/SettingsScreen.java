@@ -8,6 +8,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 /** Vanilla UI shared by Mod Menu, F8 and /mcp config. */
 public final class SettingsScreen extends Screen {
@@ -15,7 +17,7 @@ public final class SettingsScreen extends Screen {
     private final MinecraftMcpClient owner;
     private final ClientConfig draft;
     private final List<Label> labels = new ArrayList<>();
-    private EditBox port, token, tag, tagColor, name, nameColor, messageColor;
+    private String portText;
     private boolean chatPage;
     private String error = "";
     private record Label(String text, int x, int y) { }
@@ -23,59 +25,59 @@ public final class SettingsScreen extends Screen {
     public SettingsScreen(Screen parent, MinecraftMcpClient owner) {
         super(Component.literal("Minecraft MCP"));
         this.parent = parent; this.owner = owner; this.draft = owner.config();
+        this.portText = Integer.toString(draft.port);
     }
     @Override protected void init() {
         labels.clear();
         int left = width / 2 - 155, top = Math.max(47, (height - 210) / 2), y = top + 30;
         labels.add(new Label(chatPage ? "Colors accept names or #RRGGBB." : "Paste the same token into your MCP configuration.", left, top));
         labels.add(new Label("Apply stops active agent tasks.", left, top+12));
-        addRenderableWidget(Button.builder(Component.literal(chatPage ? "Connection" : "Chat appearance"), b -> {
-            if (readFields()) { chatPage = !chatPage; rebuildWidgets(); }
-        }).bounds(left, y, 150, 20).build());
-        addRenderableWidget(Button.builder(Component.literal(owner.enabled() ? "Stop agent" : "Enable agent"), b -> {
+        button(chatPage ? "Connection" : "Chat appearance", left, y, 150, b -> {
+            if (readPort()) { chatPage = !chatPage; rebuildWidgets(); }
+        });
+        button(owner.enabled() ? "Stop agent" : "Enable agent", left+160, y, 150, b -> {
             owner.setEnabled(!owner.enabled()); b.setMessage(Component.literal(owner.enabled() ? "Stop agent" : "Enable agent"));
-        }).bounds(left + 160, y, 150, 20).build());
+        });
         if (chatPage) {
-            tag = field("Tag", draft.tag, left, y+29, 160);
-            tagColor = field("Tag color", draft.tagColor, left, y+53, 160);
-            name = field("Name (optional)", draft.name, left, y+77, 160);
-            nameColor = field("Name color", draft.nameColor, left, y+101, 160);
-            messageColor = field("Message color", draft.messageColor, left, y+125, 160);
+            field("Tag", draft.tag, left, y+29, value -> draft.tag = value);
+            field("Tag color", draft.tagColor, left, y+53, value -> draft.tagColor = value);
+            field("Name (optional)", draft.name, left, y+77, value -> draft.name = value);
+            field("Name color", draft.nameColor, left, y+101, value -> draft.nameColor = value);
+            field("Message color", draft.messageColor, left, y+125, value -> draft.messageColor = value);
         } else {
-            port = field("Port", Integer.toString(draft.port), left, y+29, 160);
-            token = field("Token", draft.token, left, y+53, 160);
-            addRenderableWidget(Button.builder(Component.literal("Copy token"), b -> minecraft.keyboardHandler.setClipboard(token.getValue()))
-                .bounds(left, y+79, 150, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Generate token"), b -> token.setValue(ClientConfig.newToken()))
-                .bounds(left+160, y+79, 150, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")), b -> {
-                draft.autoStart = !draft.autoStart; b.setMessage(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")));
-            }).bounds(left, y+105, 310, 20).build());
-            addRenderableWidget(Button.builder(Component.literal("Allow remote: " + (draft.allowRemote ? "on" : "off")), b -> {
-                draft.allowRemote = !draft.allowRemote;
-                b.setMessage(Component.literal("Allow remote: " + (draft.allowRemote ? "on" : "off")));
-            }).bounds(left, y+129, 310, 20)
-                .tooltip(Tooltip.create(Component.literal("On: listen on all IPv4 interfaces. Your token is still required. Use a trusted network or encrypted tunnel.")))
-                .build());
+            field("Port", portText, left, y+29, value -> portText = value);
+            EditBox token = field("Token", draft.token, left, y+53, value -> draft.token = value);
+            button("Copy token", left, y+79, 150, b -> minecraft.keyboardHandler.setClipboard(token.getValue()));
+            button("Generate token", left+160, y+79, 150, b -> token.setValue(ClientConfig.newToken()));
+            toggle("Auto-start", left, y+105, () -> draft.autoStart, value -> draft.autoStart = value);
+            toggle("Allow remote", left, y+129, () -> draft.allowRemote, value -> draft.allowRemote = value)
+                .setTooltip(Tooltip.create(Component.literal("On: listen on all IPv4 interfaces. Your token is still required. Use a trusted network or encrypted tunnel.")));
         }
-        addRenderableWidget(Button.builder(Component.literal("Apply"), b -> {
-            if (!readFields()) return;
+        button("Apply", left, y+157, 150, b -> {
+            if (!readPort()) return;
             try { owner.apply(draft); error = "Saved"; }
             catch (Exception e) { error = e.getMessage(); }
-        }).bounds(left, y+157, 150, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose()).bounds(left+160, y+157, 150, 20).build());
+        });
+        button("Done", left+160, y+157, 150, b -> onClose());
     }
-    private EditBox field(String label, String value, int x, int y, int size) {
+    private Button button(String label, int x, int y, int width, Button.OnPress action) {
+        return addRenderableWidget(Button.builder(Component.literal(label), action).bounds(x, y, width, 20).build());
+    }
+    private Button toggle(String label, int x, int y, BooleanSupplier get, Consumer<Boolean> set) {
+        return button(label + ": " + (get.getAsBoolean() ? "on" : "off"), x, y, 310, b -> {
+            set.accept(!get.getAsBoolean());
+            b.setMessage(Component.literal(label + ": " + (get.getAsBoolean() ? "on" : "off")));
+        });
+    }
+    private EditBox field(String label, String value, int x, int y, Consumer<String> responder) {
         labels.add(new Label(label, x, y+6));
-        EditBox box = new EditBox(font, x+150, y, size, 20, Component.literal(label));
-        box.setMaxLength(256); box.setValue(value); addRenderableWidget(box); return box;
+        EditBox box = new EditBox(font, x+150, y, 160, 20, Component.literal(label));
+        box.setMaxLength(256); box.setValue(value); box.setResponder(responder);
+        return addRenderableWidget(box);
     }
-    private boolean readFields() {
+    private boolean readPort() {
         try {
-            if (chatPage) {
-                draft.tag = tag.getValue(); draft.tagColor = tagColor.getValue(); draft.name = name.getValue();
-                draft.nameColor = nameColor.getValue(); draft.messageColor = messageColor.getValue();
-            } else { draft.port = Integer.parseInt(port.getValue()); draft.token = token.getValue(); }
+            draft.port = Integer.parseInt(portText);
             error = ""; return true;
         } catch (NumberFormatException e) { error = "Port must be a number"; return false; }
     }

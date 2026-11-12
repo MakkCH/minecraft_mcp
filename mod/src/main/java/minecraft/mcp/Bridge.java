@@ -2,7 +2,8 @@ package minecraft.mcp;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.annotations.SerializedName;
+import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.*;
@@ -24,10 +25,9 @@ public final class Bridge implements AutoCloseable {
     private final int outputLimit;
 
     public Bridge(String host, int port, String token, boolean enabled, int outputLimit) throws IOException {
-        if (token.length() < 32) throw new IllegalArgumentException("Token must have at least 32 characters");
-        this.token = ("Bearer " + token).getBytes(StandardCharsets.UTF_8);
+        setToken(token);
         this.enabled = enabled;
-        this.outputLimit = Math.max(4096, Math.min(outputLimit, 1048576));
+        this.outputLimit = Math.clamp(outputLimit, 4096, 1048576);
         server = HttpServer.create(new InetSocketAddress(host, port), 16);
         server.setExecutor(workers);
         server.createContext("/", this::handle);
@@ -46,7 +46,7 @@ public final class Bridge implements AutoCloseable {
     }
     public synchronized Job createJob() {
         // Evict only finished tasks; never silently lose control of a running context.
-        if (jobs.size() >= 128) jobs.values().removeIf(j -> !j.status().equals("running") && !j.status().equals("active"));
+        if (jobs.size() >= 128) jobs.values().removeIf(j -> !j.isLive());
         if (jobs.size() >= 128) throw new IllegalStateException("Too many active scripts; stop some first");
         Job job = new Job(UUID.randomUUID().toString(), outputLimit);
         jobs.put(job.id, job);
@@ -62,9 +62,7 @@ public final class Bridge implements AutoCloseable {
             if (x.getRequestHeaders().containsKey("Origin")) { send(x, 403, error("Browser requests are not accepted")); return; }
             String path = x.getRequestURI().getPath();
             if (path.equals("/status") && x.getRequestMethod().equals("GET")) {
-                JsonObject status = new JsonObject();
-                status.addProperty("protocol", 1); status.addProperty("enabled", enabled);
-                send(x, 200, status); return;
+                send(x, 200, Map.of("protocol", 1, "enabled", enabled)); return;
             }
             if (!"1".equals(x.getRequestHeaders().getFirst("X-Minecraft-Mcp-Protocol"))) {
                 send(x, 426, error("Incompatible MCP protocol; update the MCP server")); return;
@@ -73,7 +71,7 @@ public final class Bridge implements AutoCloseable {
                 Map<String,String> q = query(x.getRequestURI().getRawQuery());
                 Job job = getJob(q.get("task"));
                 if (job == null) { send(x, 404, error("Unknown or expired task")); return; }
-                int wait = Math.max(0, Math.min(Integer.parseInt(q.getOrDefault("wait_ms", "0")), 10000));
+                int wait = Math.clamp(Integer.parseInt(q.getOrDefault("wait_ms", "0")), 0, 10000);
                 send(x, 200, job.read(wait, Boolean.parseBoolean(q.getOrDefault("wait_for_completion", "false"))));
             } else if (path.equals("/command") && x.getRequestMethod().equals("POST")) {
                 byte[] bytes = x.getRequestBody().readNBytes(1048577);
@@ -97,17 +95,13 @@ public final class Bridge implements AutoCloseable {
         }
         return out;
     }
-    private static void send(HttpExchange x, int status, JsonObject body) throws IOException {
+    private static void send(HttpExchange x, int status, Object body) throws IOException {
         byte[] bytes = JSON.toJson(body).getBytes(StandardCharsets.UTF_8);
         x.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         x.sendResponseHeaders(status, bytes.length);
         x.getResponseBody().write(bytes);
     }
-    static JsonObject error(String message) {
-        JsonObject out = new JsonObject();
-        out.addProperty("error", message);
-        return out;
-    }
+    static Map<String, String> error(String message) { return Collections.singletonMap("error", message); }
     public void close() {
         enabled = false;
         server.stop(0);
@@ -117,9 +111,9 @@ public final class Bridge implements AutoCloseable {
     }
     public static final class Request {
         public final String body;
-        private final CompletableFuture<JsonObject> reply = new CompletableFuture<>();
+        private final CompletableFuture<Object> reply = new CompletableFuture<>();
         Request(String body) { this.body = body; }
-        public void complete(JsonObject json) { reply.complete(json); }
+        public void complete(Object json) { reply.complete(json); }
     }
     public static final class Job {
         public final String id;
@@ -128,11 +122,11 @@ public final class Bridge implements AutoCloseable {
         private long dropped;
         private boolean mainDone, stopped;
         private String error;
-        private Object context;
+        private BaseScriptContext<?> context;
         private final List<Object> tracked = new ArrayList<>();
         Job(String id, int limit) { this.id = id; this.limit = limit; }
-        public synchronized void attach(Object context) { this.context = context; }
-        public synchronized Object getContext() { return context; }
+        public synchronized void attach(BaseScriptContext<?> context) { this.context = context; }
+        public synchronized BaseScriptContext<?> getContext() { return context; }
         public synchronized void write(String text) {
             output.append(text).append('\n');
             if (output.length() > limit) {
@@ -153,29 +147,25 @@ public final class Bridge implements AutoCloseable {
             if (stopped) return "stopped";
             if (error != null) return "error";
             if (!mainDone) return "running";
-            if (context != null) try {
-                boolean closed = (boolean)context.getClass().getMethod("isContextClosed").invoke(context);
-                boolean keepAlive = (boolean)context.getClass().getMethod("shouldKeepAlive").invoke(context);
-                if (!closed && keepAlive) return "active";
-            } catch (ReflectiveOperationException ignored) { /* Context compatibility is checked live. */ }
+            if (context != null && !context.isContextClosed() && context.shouldKeepAlive()) return "active";
             return "completed";
         }
-        public synchronized JsonObject read(int waitMs, boolean waitForCompletion) throws InterruptedException {
+        public synchronized boolean isLive() {
+            return switch (status()) { case "running", "active" -> true; default -> false; };
+        }
+        public record Output(String task, String status, String output,
+                             @SerializedName("dropped_chars") long droppedChars, String error) { }
+        public synchronized Output read(int waitMs, boolean waitForCompletion) throws InterruptedException {
             long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(waitMs);
             // execute waits for the script body; read_output streams as soon as output arrives.
             // Native callbacks may keep a finished body active indefinitely.
             while (waitForCompletion ? status().equals("running")
-                    : output.isEmpty() && (status().equals("running") || status().equals("active"))) {
+                    : output.isEmpty() && isLive()) {
                 long left = deadline - System.nanoTime();
                 if (left <= 0) break;
                 TimeUnit.NANOSECONDS.timedWait(this, left);
             }
-            JsonObject result = new JsonObject();
-            result.addProperty("task", id);
-            result.addProperty("status", status());
-            result.addProperty("output", output.toString());
-            result.addProperty("dropped_chars", dropped);
-            result.addProperty("error", error);
+            Output result = new Output(id, status(), output.toString(), dropped, error);
             output.setLength(0); dropped = 0;
             return result;
         }

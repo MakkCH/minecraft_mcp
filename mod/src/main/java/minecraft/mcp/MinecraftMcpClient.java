@@ -93,20 +93,18 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         else bridge.setToken(next.token);
         config = next.copy(); startupError = null;
     }
-    private JsonObject status() {
-        JsonObject out = new JsonObject(); out.addProperty("enabled", enabled());
-        out.addProperty("protocol", 1);
-        out.addProperty("activeTasks", bridge == null ? 0 : Arrays.stream(bridge.getJobs()).filter(j -> Set.of("running","active").contains(j.status())).count());
-        return out;
+    private record Status(boolean enabled, int protocol, long activeTasks) { }
+    private Status status() {
+        return new Status(enabled(), 1, bridge == null ? 0 : Arrays.stream(bridge.getJobs()).filter(Bridge.Job::isLive).count());
     }
     private int reportStatus() {
-        JsonObject current = status();
-        localChat(Component.empty().withStyle(Style.EMPTY.withColor(0xFFFFFF))
+        Status current = status();
+        ClientPlatform.chat(Component.empty().withStyle(Style.EMPTY.withColor(0xFFFFFF))
             .append(colored("[Minecraft_MCP]", "#FFAA00"))
             .append(" MCP ")
-            .append(current.get("enabled").getAsBoolean() ? "enabled" : "disabled")
+            .append(current.enabled() ? "enabled" : "disabled")
             .append(" · Active tasks: ")
-            .append(colored(current.get("activeTasks").getAsString(), "#5555FF")));
+            .append(colored(Long.toString(current.activeTasks()), "#5555FF")));
         return 1;
     }
     private void handle(Bridge.Request request) {
@@ -128,8 +126,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                         var container = core.exec("js", prelude + "\n" + code, file, event, () -> job.finish(null), e -> job.finish(e.toString()));
                         job.attach(container.getCtx());
                     } catch (Throwable e) { job.finish(e.toString()); }
-                    JsonObject response = new JsonObject(); response.addProperty("task", job.id);
-                    request.complete(response);
+                    request.complete(Map.of("task", job.id));
                 }
                 case "stop" -> {
                     if (req.has("task")) { stopJob(bridge.getJob(req.get("task").getAsString())); releaseControls(); }
@@ -141,9 +138,8 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     if (message.isEmpty() || message.length() > 2000) throw new IllegalArgumentException("Message must be 1–2000 characters");
                     MutableComponent text = colored("[" + config.tag + "]", config.tagColor);
                     if (!config.name.isEmpty()) text.append(colored(" " + config.name, config.nameColor));
-                    localChat(text.append(colored(" " + message, config.messageColor)));
-                    JsonObject response = new JsonObject(); response.addProperty("displayed", true);
-                    request.complete(response);
+                    ClientPlatform.chat(text.append(colored(" " + message, config.messageColor)));
+                    request.complete(Map.of("displayed", true));
                 }
                 case "screenshot" -> capture(request);
                 default -> throw new IllegalArgumentException("Unknown operation");
@@ -159,9 +155,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     path = Files.createTempFile("minecraft-mcp-capture-", ".png");
                     image.writeToFile(path);
                     String data = Base64.getEncoder().encodeToString(Files.readAllBytes(path));
-                    JsonObject response = new JsonObject();
-                    response.addProperty("mimeType", "image/png"); response.addProperty("data", data);
-                    request.complete(response);
+                    request.complete(Map.of("mimeType", "image/png", "data", data));
                 } catch (Exception e) { request.complete(Bridge.error(e.toString())); }
                 finally { if (path != null) try { Files.deleteIfExists(path); } catch (IOException e) { LOG.warn("Capture cleanup failed", e); } }
             });
@@ -170,12 +164,12 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     private static MutableComponent colored(String text, String color) {
         return Component.literal(text).withStyle(Style.EMPTY.withColor(TextColor.parseColor(color).getOrThrow()));
     }
-    private static void localChat(Component text) { ClientPlatform.chat(text); }
     private void stopJob(Bridge.Job job) {
         if (job == null) throw new IllegalArgumentException("Unknown task");
         // Closing a callback context can change active to completed; capture it first.
-        boolean cancelled = Set.of("running", "active").contains(job.status());
-        if (job.getContext() instanceof BaseScriptContext<?> ctx && !ctx.isContextClosed()) {
+        boolean cancelled = job.isLive();
+        BaseScriptContext<?> ctx = job.getContext();
+        if (ctx != null && !ctx.isContextClosed()) {
             for (var entry : new ArrayList<>(ctx.eventListeners.entrySet()))
                 JsMacrosClient.clientCore.eventRegistry.removeListener(entry.getValue(), entry.getKey());
             ctx.closeContext();
