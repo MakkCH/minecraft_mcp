@@ -23,12 +23,12 @@ public final class Bridge implements AutoCloseable {
     private volatile boolean enabled;
     private final int outputLimit;
 
-    public Bridge(int port, String token, boolean enabled, int outputLimit) throws IOException {
+    public Bridge(String host, int port, String token, boolean enabled, int outputLimit) throws IOException {
         if (token.length() < 32) throw new IllegalArgumentException("Token must have at least 32 characters");
         this.token = ("Bearer " + token).getBytes(StandardCharsets.UTF_8);
         this.enabled = enabled;
         this.outputLimit = Math.max(4096, Math.min(outputLimit, 1048576));
-        server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 16);
+        server = HttpServer.create(new InetSocketAddress(host, port), 16);
         server.setExecutor(workers);
         server.createContext("/", this::handle);
         server.start();

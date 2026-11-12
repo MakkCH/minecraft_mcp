@@ -15,6 +15,7 @@ public final class ClientConfig {
     public int port = 28473;
     public String token = newToken();
     public boolean autoStart = true;
+    public boolean allowRemote = false;
     public String tag = "AGENT", tagColor = "aqua", name = "", nameColor = "gold", messageColor = "white";
 
     public static String newToken() {
@@ -22,6 +23,7 @@ public final class ClientConfig {
         return HexFormat.of().formatHex(bytes);
     }
     public ClientConfig copy() { return JSON.fromJson(JSON.toJson(this), ClientConfig.class); }
+    public String bindHost() { return allowRemote ? "0.0.0.0" : "127.0.0.1"; }
     public void validate() {
         if (port < 1024 || port > 65535) throw new IllegalArgumentException("Port must be 1024–65535");
         if (token == null || !token.matches("[!-~]{32,256}")) throw new IllegalArgumentException("Token must be 32–256 printable characters without spaces");

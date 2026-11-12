@@ -3,6 +3,7 @@ package minecraft.mcp;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
@@ -50,6 +51,12 @@ public final class SettingsScreen extends Screen {
             addRenderableWidget(Button.builder(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")), b -> {
                 draft.autoStart = !draft.autoStart; b.setMessage(Component.literal("Auto-start: " + (draft.autoStart ? "on" : "off")));
             }).bounds(left, y+105, 310, 20).build());
+            addRenderableWidget(Button.builder(Component.literal("Allow remote: " + (draft.allowRemote ? "on" : "off")), b -> {
+                draft.allowRemote = !draft.allowRemote;
+                b.setMessage(Component.literal("Allow remote: " + (draft.allowRemote ? "on" : "off")));
+            }).bounds(left, y+129, 310, 20)
+                .tooltip(Tooltip.create(Component.literal("On: listen on all IPv4 interfaces. Your token is still required. Use a trusted network or encrypted tunnel.")))
+                .build());
         }
         addRenderableWidget(Button.builder(Component.literal("Apply"), b -> {
             if (!readFields()) return;

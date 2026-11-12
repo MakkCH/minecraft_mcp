@@ -44,7 +44,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         } catch (Exception e) { startupError = e.getMessage(); config = new ClientConfig(); LOG.error("Could not load Minecraft MCP settings", e); }
         KeyMapping settingsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.minecraft_mcp.settings", InputConstants.KEY_F8, KeyMapping.Category.MISC));
         ClientLifecycleEvents.CLIENT_STARTED.register(mc -> {
-            if (startupError == null) try { bridge = new Bridge(config.port, config.token, config.autoStart, 65536); }
+            if (startupError == null) try { bridge = new Bridge(config.bindHost(), config.port, config.token, config.autoStart, 65536); }
             catch (IOException e) { startupError = e.getMessage(); LOG.error("Could not start Minecraft MCP listener", e); }
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> close());
@@ -66,15 +66,28 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     }
     public ClientConfig config() { return config.copy(); }
     public boolean enabled() { return bridge != null && bridge.isEnabled(); }
-    public String connectionStatus() { return bridge == null ? "Not listening: " + startupError : "127.0.0.1:" + config.port + " — " + (enabled() ? "Agent enabled" : "Player control"); }
+    public String connectionStatus() { return bridge == null ? "Not listening: " + startupError : config.bindHost() + ":" + config.port + " — " + (enabled() ? "Agent enabled" : "Player control"); }
     public void setEnabled(boolean enabled) { if (bridge != null) bridge.setEnabled(enabled); if (!enabled) stopAll(); }
     public void apply(ClientConfig next) throws IOException {
         next.validate();
         boolean enabled = bridge == null ? next.autoStart : bridge.isEnabled();
-        // Bind a changed port before disturbing the existing connection.
-        Bridge replacement = bridge == null || next.port != config.port ? new Bridge(next.port, next.token, enabled, 65536) : null;
-        try { next.save(configPath); }
-        catch (IOException e) { if (replacement != null) replacement.close(); throw e; }
+        boolean rebind = bridge == null || next.port != config.port || next.allowRemote != config.allowRemote;
+        // A wildcard and loopback listener cannot share the same port. Release it
+        // before changing scope; restore the old listener if binding or saving fails.
+        boolean released = bridge != null && next.port == config.port && next.allowRemote != config.allowRemote;
+        if (released) { stopAll(); bridge.close(); bridge = null; }
+        Bridge replacement = null;
+        try {
+            if (rebind) replacement = new Bridge(next.bindHost(), next.port, next.token, enabled, 65536);
+            next.save(configPath);
+        } catch (IOException e) {
+            if (replacement != null) replacement.close();
+            if (released) {
+                try { bridge = new Bridge(config.bindHost(), config.port, config.token, enabled, 65536); }
+                catch (IOException restoreError) { startupError = restoreError.getMessage(); e.addSuppressed(restoreError); }
+            }
+            throw e;
+        }
         stopAll();
         if (replacement != null) { if (bridge != null) bridge.close(); bridge = replacement; }
         else bridge.setToken(next.token);
