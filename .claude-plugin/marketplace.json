@@ -1,0 +1,14 @@
+{
+  "name": "minecraft-mcp",
+  "owner": {
+    "name": "Mak"
+  },
+  "plugins": [
+    {
+      "name": "minecraft-mcp",
+      "source": "./",
+      "description": "Control your Minecraft client with JsMacros scripts, screenshots and player takeover."
+    }
+  ],
+  "description": "Minecraft MCP server and companion Skill for Claude Code."
+}
