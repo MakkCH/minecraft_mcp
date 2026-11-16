@@ -104,8 +104,11 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
       for(const key of ['mining','building','goal','commands']) assert.equal(capabilities[key],true);
     }
     const capture=await call('screenshot');
-    const png=Buffer.from(capture.content.find(c=>c.type==='image').data,'base64');
-    assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+    const image=capture.content.find(c=>c.type==='image');
+    assert.equal(image.mimeType,'image/jpeg');
+    const jpeg=Buffer.from(image.data,'base64');
+    assert.deepEqual([...jpeg.subarray(0,3)],[255,216,255]);
+    assert.deepEqual([...jpeg.subarray(-2)],[255,217]);
   } finally {
     // Native wrappers retain contexts: close only this test's tasks. As with all
     // stop calls, this also relinquishes shared scripted input/mod movement.

@@ -71,7 +71,7 @@ export function createMcpServer({url, token}) {
     description:'Capture the actual Minecraft framebuffer including HUD, menus and overlays. Returns the image directly.', inputSchema:{}
   }, safe(async () => {
     const result = await request('command', {op:'screenshot'});
-    if (result.mimeType !== 'image/png' || typeof result.data !== 'string') throw new Error('Invalid screenshot response');
+    if (!['image/png', 'image/jpeg'].includes(result.mimeType) || typeof result.data !== 'string') throw new Error('Invalid screenshot response');
     return {content:[{type:'image', mimeType:result.mimeType, data:result.data}]};
   }));
   server.registerTool('chat', {
