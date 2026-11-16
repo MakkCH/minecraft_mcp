@@ -2,7 +2,7 @@
   <img src="assets/banner.png" width="100%" alt="Minecraft MCP 原始 logo 與遊戲實景：雪山下的石橋與河畔小屋" />
 </p>
 <h1 align="center">Minecraft MCP</h1>
-<p align="center">讓 AI Agent 操作你的 Minecraft 客戶端，隨時用 <code>/mcp stop</code> 接手。</p>
+<p align="center">讓 AI Agent 操作你的 Minecraft 客戶端，隨時用 <code>/mcp stop</code> 停止腳本。</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@makkch/minecraft-mcp"><img src="https://img.shields.io/npm/v/%40makkch%2Fminecraft-mcp?style=flat-square&amp;color=3f7d49" alt="npm version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="License: MIT" /></a>
@@ -14,7 +14,7 @@
   <a href="#作品展示">作品展示</a> · <a href="#系統需求">系統需求</a> · <a href="#安裝">安裝</a> · <a href="#掌握控制權">掌握控制權</a> · <a href="#remote-連線">Remote 連線</a>
 </p>
 
-Agent 透過 JsMacros 腳本操作你的遊戲角色：寫腳本、執行、看輸出、截圖、在聊天欄回報。你在自己的視角看著它玩，想接手時輸入 `/mcp stop`。
+Agent 透過 JsMacros 腳本操作你的遊戲角色：寫腳本、執行、看輸出、截圖、在聊天欄回報。你在自己的視角看著它玩，隨時可以輸入 `/mcp stop` 停用 Agent。
 
 <a id="gallery"></a>
 
@@ -206,12 +206,12 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 
 | 在 Minecraft 裡 | 效果 |
 | --- | --- |
-| `/mcp stop` | 停用 Agent、取消 MCP 腳本、釋放按鍵 |
+| `/mcp stop` | 停用 Agent、停止 MCP 腳本與 Baritone、釋放腳本按住的鍵 |
 | `/mcp start` | 重新允許 Agent 操作 |
 | `/mcp status` | 顯示是否啟用，以及執行中的任務數 |
 | `/mcp config` 或 F8 | 開啟設定畫面 |
 
-- 停用後 Agent 仍然可以截圖，但不能操作。
+- 停用後 Agent 仍可截圖。如果其他模組還在移動或建造，請用該模組的停止功能。
 - 離開伺服器或單人世界時，任務會自動取消；切換維度不會。
 - `[AGENT]` 訊息只顯示在你自己的聊天欄，不會傳到多人伺服器。
 - 模組介面目前只有英文。

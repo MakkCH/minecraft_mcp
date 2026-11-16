@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { readFile, mkdtemp, cp, symlink, writeFile, rm } from 'node:fs/promises';
+import { access, readFile, mkdtemp, cp, symlink, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -81,6 +81,41 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     assert.equal(falsy.status,'error');
     assert.equal(falsy.output,'');
 
+    const retained = await execute({code:'', keep_alive:true});
+    assert.equal(retained.status, 'active');
+    // Collect an unrelated weak referent after the empty script has returned.
+    const gc = await execute({code:`
+      const Ref = Java.type('java.lang.ref.WeakReference');
+      const ref = new Ref(new (Java.type('java.lang.Object'))());
+      for (let i = 0; i < 20 && !ref.refersTo(null); i++) {
+        Java.type('java.lang.System').gc();
+        Java.type('java.lang.Thread').sleep(25);
+      }
+      console.log(ref.refersTo(null));
+    `});
+    assert.equal(gc.output, 'true\n', gc.error ?? 'GC did not clear the weak reference');
+    const retainedRead = JSON.parse((await call('read_output', {task:retained.task})).content[0].text);
+    assert.equal(retainedRead.status, 'active');
+    assert.equal(handoff.status, 'completed');
+    const retainedError = await execute({code:'throw new Error("retained-error");', keep_alive:true});
+    assert.equal(retainedError.status, 'error');
+    assert.match(retainedError.error, /retained-error/);
+    await call('stop', {task:retained.task});
+    assert.equal(JSON.parse((await call('read_output', {task:retained.task})).content[0].text).status, 'stopped');
+
+    const dir = await mkdtemp(join(tmpdir(), 'mcp-cleanup-'));
+    try {
+      const path = join(dir, 'owned-by-task');
+      const owner = await execute({keep_alive:true, args:{path}, code:`
+        const file = mcp.track(new (Java.type('java.io.File'))(mcp.args.path), 'delete');
+        file.createNewFile();
+      `});
+      assert.equal(owner.status, 'active', owner.error);
+      await access(path);
+      await call('stop', {task:owner.task});
+      await assert.rejects(access(path), {code:'ENOENT'});
+    } finally { await rm(dir, {recursive:true, force:true}); }
+
     const inventory=await execute({file:root+'skills/minecraft-mcp/scripts/discover-mods.js'});
     assert.equal(inventory.error,null);
     const mods=JSON.parse(inventory.output);
@@ -111,8 +146,7 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     assert.deepEqual([...jpeg.subarray(0,3)],[255,216,255]);
     assert.deepEqual([...jpeg.subarray(-2)],[255,217]);
   } finally {
-    // Native wrappers retain contexts: close only this test's tasks. As with all
-    // stop calls, this also relinquishes shared scripted input/mod movement.
+    // Close retained tasks left behind if an assertion failed. Stop also releases shared input.
     for(const task of tasks) await call('stop',{task});
     await client.close();
   }

@@ -41,6 +41,12 @@ The native **one-argument** `Client.runOnMainThread(...)` is fire-and-forget. If
 
 ## Lifetimes
 
-For drawings/commands created by a task, call `mcp.track(drawOrCommand)` so stop can unregister them. Task event listeners are removed on stop. Raw Java calls can create resources the bridge cannot discover: explicitly clean up those resources. Errors in later native callbacks can go to the game log rather than task output; catch and `console.error` them.
+`execute` defaults to `keep_alive: false`: when the script body returns, its context closes and its registered resources are cleaned up. Finish or wait for asynchronous work before returning.
+
+Use `execute({file: "watch.js", keep_alive: true})` for persistent listeners or drawings. After the body returns, the task stays `active` even if it has no callbacks. Errors, explicit stops and leaving the world still close it. The tool's `wait_ms` does not control context lifetime.
+
+Call `mcp.track(drawOrCommand)` before registering a drawing or command. It returns the object and schedules its `unregister()` method for task cleanup. For other Java resources, pass the name of an accessible public no-argument instance method, for example `mcp.track(process, "cancel")`. Cleanup runs on the Minecraft client thread after the context closes, including on error or player stop. Use a short native method that works after JavaScript has stopped. Cleanup failures appear in task output.
+
+Task event listeners are removed during cleanup. Errors in later native callbacks can go to the game log rather than task output; catch and `console.error` them.
 
 Disconnecting from a server or leaving a singleplayer world cancels tasks and releases controls; changing dimensions does not. Disconnecting the MCP client does not stop game scripts; use `stop` or the player's `/mcp stop`.

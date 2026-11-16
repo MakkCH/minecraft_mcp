@@ -2,7 +2,7 @@
   <img src="assets/banner.png" width="100%" alt="Minecraft MCP logo over a gameplay capture of a stone bridge and riverside workshop beneath snowy hills" />
 </p>
 <h1 align="center">Minecraft MCP</h1>
-<p align="center">Let an AI agent play in your Minecraft client. Take over with <code>/mcp stop</code>.</p>
+<p align="center">Let an AI agent play in your Minecraft client. Stop its scripts with <code>/mcp stop</code>.</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@makkch/minecraft-mcp"><img src="https://img.shields.io/npm/v/%40makkch%2Fminecraft-mcp?style=flat-square&amp;color=3f7d49" alt="npm version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="License: MIT" /></a>
@@ -14,7 +14,7 @@
   <a href="#gallery">Gallery</a> · <a href="#requirements">Requirements</a> · <a href="#installation">Installation</a> · <a href="#staying-in-control">Staying in control</a> · <a href="#remote-connection">Remote connection</a>
 </p>
 
-The agent controls your character with JsMacros scripts: it writes one, runs it, reads the output, takes a screenshot, and reports in chat. You watch from your own point of view and type `/mcp stop` whenever you want the controls back.
+The agent controls your character with JsMacros scripts: it writes one, runs it, reads the output, takes a screenshot, and reports in chat. You watch from your own point of view and type `/mcp stop` to disable the agent.
 
 ## Gallery
 
@@ -204,12 +204,12 @@ If you already use the plugin and want to switch to the standalone setup above, 
 
 | In Minecraft | Effect |
 | --- | --- |
-| `/mcp stop` | Disable the agent, cancel MCP scripts, release held keys |
+| `/mcp stop` | Disable the agent, stop MCP scripts and Baritone, release scripted keys |
 | `/mcp start` | Allow the agent to act again |
 | `/mcp status` | Show whether control is enabled and how many tasks are running |
 | `/mcp config` or F8 | Open the settings screen |
 
-- While disabled, the agent can still take screenshots but cannot act.
+- While disabled, the agent can still take screenshots. If another mod keeps moving or building, use that mod’s stop control.
 - Disconnecting from a server or leaving a singleplayer world cancels running tasks. Changing dimensions does not.
 - `[AGENT]` messages appear only in your own chat. They are not sent to multiplayer servers.
 - The mod interface is in English.

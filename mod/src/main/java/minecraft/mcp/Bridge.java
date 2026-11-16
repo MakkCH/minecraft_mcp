@@ -6,6 +6,8 @@ import xyz.wagyourtail.jsmacros.core.language.BaseScriptContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.*;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -43,14 +45,14 @@ public final class Bridge implements AutoCloseable {
         while ((r = requests.poll()) != null) if (!r.reply.isDone()) return r;
         return null;
     }
-    public synchronized Job createJob() {
+    public synchronized Job createJob(boolean keepAlive) {
         // Reclaim only the oldest consumed result, preserving unread output and errors.
         if (jobs.size() >= 128) {
             var iterator = jobs.values().iterator();
             while (iterator.hasNext()) if (iterator.next().discard()) { iterator.remove(); break; }
         }
         if (jobs.size() >= 128) throw new IllegalStateException("Task limit reached; stop active scripts and read their final output");
-        Job job = new Job(UUID.randomUUID().toString());
+        Job job = new Job(UUID.randomUUID().toString(), keepAlive);
         jobs.put(job.id, job);
         return job;
     }
@@ -119,6 +121,7 @@ public final class Bridge implements AutoCloseable {
     }
     public static final class Job {
         public final String id;
+        public final boolean keepAlive;
         private static final int OUTPUT_LIMIT = 65536;
         private final byte[] output = new byte[OUTPUT_LIMIT];
         private int outputHead, outputSize;
@@ -126,12 +129,22 @@ public final class Bridge implements AutoCloseable {
         private boolean mainDone, stopped, terminalRead;
         private String error;
         private BaseScriptContext<?> context;
-        private final List<Object> tracked = new ArrayList<>();
-        Job(String id) { this.id = id; }
+        private Object retainedSyncObject;
+        private record Cleanup(Object target, Method method) {}
+        private final List<Cleanup> tracked = new ArrayList<>();
+        Job(String id, boolean keepAlive) { this.id = id; this.keepAlive = keepAlive; }
         private synchronized boolean discard() {
             return terminalRead && outputSize == 0 && !isLive() && (context == null || context.isContextClosed());
         }
-        public synchronized void attach(BaseScriptContext<?> context) { this.context = context; }
+        public synchronized void attach(BaseScriptContext<?> context) {
+            if (this.context != null) return; // Both the prelude and the dispatcher attach.
+            this.context = context;
+            if (keepAlive) {
+                // JsMacros drops its strong reference when the script body returns.
+                retainedSyncObject = context.getSyncObject();
+                context.hasMethodWrapperBeenInvoked = true;
+            }
+        }
         public synchronized BaseScriptContext<?> getContext() { return context; }
         public synchronized void write(String text) {
             byte[] incoming = (text + '\n').getBytes(StandardCharsets.UTF_8);
@@ -167,17 +180,25 @@ public final class Bridge implements AutoCloseable {
             }
             this.error = error; mainDone = true; terminalRead = false; notifyAll();
         }
-        public synchronized void track(Object obj) { tracked.add(obj); }
+        public synchronized void track(Object target, String methodName) throws NoSuchMethodException {
+            Method method = target.getClass().getMethod(methodName);
+            if (Modifier.isStatic(method.getModifiers()) || !method.canAccess(target))
+                throw new IllegalArgumentException("Cleanup requires an accessible instance method: " + method);
+            tracked.add(new Cleanup(target, method));
+        }
         public synchronized void stopped(boolean cancelled) {
-            for (Object obj : tracked) try { obj.getClass().getMethod("unregister").invoke(obj); }
-            catch (ReflectiveOperationException e) { write("[cleanup] " + e); }
+            retainedSyncObject = null;
+            for (Cleanup cleanup : tracked) try { cleanup.method.invoke(cleanup.target); }
+            catch (ReflectiveOperationException e) {
+                write("[cleanup] " + cleanup.method.getName() + ": " + Objects.requireNonNullElse(e.getCause(), e));
+            }
             tracked.clear(); stopped |= cancelled; terminalRead &= !cancelled; notifyAll();
         }
         public synchronized String status() {
             if (stopped) return "stopped";
             if (error != null) return "error";
             if (!mainDone) return "running";
-            if (context != null && !context.isContextClosed() && context.shouldKeepAlive()) return "active";
+            if (context != null && !context.isContextClosed() && keepAlive) return "active";
             return "completed";
         }
         public synchronized boolean isLive() {
