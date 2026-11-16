@@ -1,0 +1,40 @@
+{
+  "name": "minecraft-mcp",
+  "version": "0.4.0",
+  "description": "Control your Minecraft client with JsMacros scripts, screenshots and player takeover. Includes the MCP server and companion Skill.",
+  "author": {
+    "name": "Mak",
+    "url": "https://github.com/MakkCH"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/MakkCH/minecraft_mcp",
+  "userConfig": {
+    "url": {
+      "type": "string",
+      "title": "Minecraft address",
+      "description": "HTTP address of the Minecraft MCP mod. Use the port shown in F8.",
+      "default": "http://127.0.0.1:28473",
+      "required": true
+    },
+    "token": {
+      "type": "string",
+      "title": "Minecraft token",
+      "description": "Press F8 in Minecraft and select Copy token.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "mcpServers": {
+    "minecraft_mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@makkch/minecraft-mcp@0.4.0"
+      ],
+      "env": {
+        "MINECRAFT_MCP_URL": "${user_config.url}",
+        "MINECRAFT_MCP_TOKEN": "${user_config.token}"
+      }
+    }
+  }
+}
