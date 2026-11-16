@@ -116,6 +116,33 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
       await assert.rejects(access(path), {code:'ENOENT'});
     } finally { await rm(dir, {recursive:true, force:true}); }
 
+    const serverThread = await execute({code:`
+      const server = Client.getMinecraft().getSingleplayerServer();
+      if (server === null) {
+        try { mcp.serverThread(() => 1); throw new Error('Expected missing server error'); }
+        catch (e) { if (e.message !== 'No integrated server is running') throw e; }
+        console.log('no-server');
+      } else {
+        const expected = new Error('server-thread-error');
+        for (let i = 0; i < 20; i++) {
+          const result = mcp.serverThread(() => {
+            if (!server.isSameThread()) throw new Error('Wrong thread');
+            return mcp.serverThread(() => ({seq:i, time:server.overworld().getGameTime()}));
+          });
+          if (result.seq !== i) throw new Error('Lost callback result');
+        }
+        try { mcp.serverThread(() => { throw expected; }); }
+        catch (e) { if (e !== expected) throw new Error('Lost exception identity'); console.log('same-error'); }
+        try { mcp.serverThread(() => { throw null; }); }
+        catch (e) { if (e !== null) throw e; console.log('null-error'); }
+        console.log('server-thread');
+      }
+    `});
+    assert.equal(serverThread.status, 'completed', serverThread.error);
+    assert.equal(serverThread.error, null);
+    assert.ok(['no-server\n', 'same-error\nnull-error\nserver-thread\n'].includes(serverThread.output));
+    t.diagnostic(serverThread.output.trim());
+
     const inventory=await execute({file:root+'skills/minecraft-mcp/scripts/discover-mods.js'});
     assert.equal(inventory.error,null);
     const mods=JSON.parse(inventory.output);

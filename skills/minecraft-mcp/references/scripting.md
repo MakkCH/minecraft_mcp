@@ -39,6 +39,18 @@ The helper captures the callback's result or error and dispatches through `Clien
 
 The native **one-argument** `Client.runOnMainThread(...)` is fire-and-forget. If the originating script keeps the GraalJS context occupied, the main thread waits for that same context until the watchdog closes it. Raw Java `Thread.sleep`, futures/latches and JS busy loops do not release this lock. `methodToJavaAsync` is not a substitute: it moves execution to a worker instead of keeping the operation on the game thread. Do not fix watchdog errors by increasing the timeout or disabling it. Split long work and use the waiting helper.
 
+## Integrated server operations
+
+`mcp.serverThread(fn)` runs a callback once on the integrated server thread and waits for its return value. Callback exceptions are rethrown at the call site, including `throw null`. Calls already on that thread run directly. Without an integrated server it throws `No integrated server is running`.
+
+Use it for singleplayer server-world operations. Keep callbacks short, and do not wait for the client thread inside them. The helper releases the GraalJS context lock while waiting for the server callback.
+
+```js
+const time = mcp.serverThread(() =>
+  Client.getMinecraft().getSingleplayerServer().overworld().getGameTime());
+console.log(time);
+```
+
 ## Lifetimes
 
 `execute` defaults to `keep_alive: false`: when the script body returns, its context closes and its registered resources are cleaned up. Finish or wait for asynchronous work before returning.

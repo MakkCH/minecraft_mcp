@@ -12,6 +12,19 @@ globalThis.print = (...args) => console.log(...args);
 globalThis.mcp = Object.freeze({
   args: JSON.parse(event.getString('args')),
   track: (obj, method = 'unregister') => { __mcpJob.track(obj, method); return obj; },
+  serverThread: fn => {
+    if (typeof fn !== 'function') throw new TypeError('mcp.serverThread expects a function');
+    const server = Client.getMinecraft().getSingleplayerServer();
+    if (server === null) throw new Error('No integrated server is running');
+    if (server.isSameThread()) return fn();
+    let result, failure, failed = false;
+    Java.type('minecraft.mcp.ScriptThreads').runOnServer(server, JavaWrapper.methodToJava(() => {
+      try { result = fn(); }
+      catch (e) { failed = true; failure = e; }
+    }));
+    if (failed) throw failure;
+    return result;
+  },
   mainThread: fn => {
     if (typeof fn !== 'function') throw new TypeError('mcp.mainThread expects a function');
     let result, failure, failed = false;
