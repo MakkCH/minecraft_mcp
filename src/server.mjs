@@ -14,8 +14,7 @@ try {
 Usage: minecraft-mcp [--help]
 
 MINECRAFT_MCP_TOKEN       Token from the Minecraft mod settings (F8)
-MINECRAFT_MCP_PORT        Local mod port (default: 28473)
-MINECRAFT_MCP_URL         Bridge base URL; overrides the local mod port
+MINECRAFT_MCP_URL         Game base URL (default: http://127.0.0.1:28473/)
 
 Recommended: run the agent, MCP server and Minecraft on the same computer.
 execute({file: "build.js"}) resolves paths from the MCP working directory.

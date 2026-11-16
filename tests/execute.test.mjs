@@ -13,7 +13,7 @@ test('real client: script inputs, diagnostics and 30-second waits', {timeout:800
   const client = new Client({name:'minecraft-mcp-execute-check',version:'1.0.0'});
   const workspace = await mkdtemp(join(tmpdir(), 'minecraft-mcp-execute-test-'));
   const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],cwd:workspace,
-    env:Object.fromEntries(['MINECRAFT_MCP_PORT','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
+    env:Object.fromEntries(['MINECRAFT_MCP_URL','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
   const tasks = [];
   async function call(name, args={}) {
     const response = await client.callTool({name,arguments:args});

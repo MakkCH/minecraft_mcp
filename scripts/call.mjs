@@ -7,7 +7,7 @@ const client = new Client({name: 'minecraft-mcp-cli', version: '0.1.0'});
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [fileURLToPath(new URL('../src/server.mjs', import.meta.url))],
-  env: Object.fromEntries(['MINECRAFT_MCP_URL', 'MINECRAFT_MCP_PORT', 'MINECRAFT_MCP_TOKEN']
+  env: Object.fromEntries(['MINECRAFT_MCP_URL', 'MINECRAFT_MCP_TOKEN']
     .filter(key => process.env[key]).map(key => [key, process.env[key]])),
   stderr: 'inherit'
 });

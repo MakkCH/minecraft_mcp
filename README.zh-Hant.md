@@ -108,7 +108,7 @@ npx skills add MakkCH/minecraft_mcp --skill minecraft-mcp -g
 
 ### 3. 加入 MCP server
 
-在你的 Agent 客戶端新增一個 **stdio** MCP server，填入第 1 步拿到的 token 和 port。
+在你的 Agent 客戶端新增一個 **stdio** MCP server，填入第 1 步拿到的 token 和遊戲 URL。URL 預設為 `http://127.0.0.1:28473/`；如果 F8 顯示其他 port，請修改 URL 中的 port。
 
 <details open>
 <summary>Codex</summary>
@@ -122,7 +122,7 @@ args = ["-y", "@makkch/minecraft-mcp@latest"]
 
 [mcp_servers.minecraft_mcp.env]
 MINECRAFT_MCP_TOKEN = "YOUR_TOKEN"
-MINECRAFT_MCP_PORT = "28473"
+MINECRAFT_MCP_URL = "http://127.0.0.1:28473/"
 ```
 
 </details>
@@ -134,7 +134,7 @@ MINECRAFT_MCP_PORT = "28473"
 
 ```sh
 claude mcp add --env MINECRAFT_MCP_TOKEN=YOUR_TOKEN \
-  --env MINECRAFT_MCP_PORT=28473 --transport stdio --scope user minecraft_mcp \
+  --env MINECRAFT_MCP_URL=http://127.0.0.1:28473/ --transport stdio --scope user minecraft_mcp \
   -- npx -y @makkch/minecraft-mcp@latest
 ```
 
@@ -153,7 +153,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
       "args": ["-y", "@makkch/minecraft-mcp@latest"],
       "env": {
         "MINECRAFT_MCP_TOKEN": "YOUR_TOKEN",
-        "MINECRAFT_MCP_PORT": "28473"
+        "MINECRAFT_MCP_URL": "http://127.0.0.1:28473/"
       }
     }
   }
@@ -171,7 +171,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 | 傳輸方式 | `stdio` |
 | 執行程式 | `npx` |
 | 參數 | `-y` 和 `@makkch/minecraft-mcp@latest`（兩個獨立參數） |
-| 環境變數 | `MINECRAFT_MCP_TOKEN`、`MINECRAFT_MCP_PORT` |
+| 環境變數 | `MINECRAFT_MCP_TOKEN`、`MINECRAFT_MCP_URL` |
 
 </details>
 
@@ -196,7 +196,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 
 **壓縮檔（`.tgz`）**：從 Release 下載並解壓，在 MCP 設定中把執行程式改為 `node`，參數改為 `src/server.mjs` 的絕對路徑，環境變數不變。Skill 仍依第 2 步安裝。
 
-**Codex 外掛**：仍然提供，內含 Skill，但不建議新使用者採用。要為每個遊戲實例分別設定 token 和 port，請用上面的獨立安裝（[Codex MCP 設定](https://developers.openai.com/codex/mcp#plugin-provided-mcp-servers)）。安裝方式見 [Codex 文件](https://developers.openai.com/plugins/build/plugins)。
+**Codex 外掛**：仍然提供，內含 Skill，但不建議新使用者採用。要為每個遊戲實例分別設定 token 和 URL，請用上面的獨立安裝（[Codex MCP 設定](https://developers.openai.com/codex/mcp#plugin-provided-mcp-servers)）。安裝方式見 [Codex 文件](https://developers.openai.com/plugins/build/plugins)。
 
 如果你已經在用外掛，又想改用上面的獨立安裝：先停用外掛，再啟用獨立安裝的 MCP server 和 Skill。
 
@@ -226,7 +226,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 可以把腳本內容送到另一台電腦執行，但 `require()` 和其他檔案存取使用的是遊戲電腦的檔案系統。跨機器時，使用自足的腳本或自行準備遊戲端的依賴。
 
 1. 在遊戲的 F8 設定開啟 **Allow remote** 並按 Apply，讓防火牆放行遊戲的 port。
-2. 在 Agent 的 MCP 設定中，把 `MINECRAFT_MCP_PORT` 換成 `MINECRAFT_MCP_URL`，填入遊戲地址，例如 `http://192.168.1.20:28473/`。
+2. 在 Agent 的 MCP 設定中，將 `MINECRAFT_MCP_URL` 設為遊戲地址，例如 `http://192.168.1.20:28473/`。
 3. 使用遊戲 F8 畫面的 token，然後重啟 MCP 連線。
 
 也可以保持 Allow remote 關閉，使用 SSH 隧道：

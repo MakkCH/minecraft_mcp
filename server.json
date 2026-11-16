@@ -24,14 +24,9 @@
           "format": "string"
         },
         {
-          "name": "MINECRAFT_MCP_PORT",
-          "description": "Port shown in the Minecraft MCP mod settings.",
-          "default": "28473",
-          "format": "number"
-        },
-        {
           "name": "MINECRAFT_MCP_URL",
-          "description": "Optional HTTP(S) game bridge base URL, including a proxy path prefix. Overrides MINECRAFT_MCP_PORT. The MCP process stays on the agent computer.",
+          "description": "HTTP(S) address of the Minecraft MCP mod. Supports a proxy path prefix.",
+          "default": "http://127.0.0.1:28473/",
           "format": "string"
         }
       ]

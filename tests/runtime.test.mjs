@@ -8,11 +8,12 @@ import { readFile, mkdtemp, cp, symlink, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readConfig } from '../src/config.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 test('real client: main-thread handoff, errors and mod discovery', {timeout:30000}, async t => {
   const client = new Client({name:'minecraft-mcp-runtime-check',version:'1.0.0'});
-  const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:Object.fromEntries(['MINECRAFT_MCP_PORT','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
+  const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:Object.fromEntries(['MINECRAFT_MCP_URL','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
   const tasks = [];
   async function call(name, args={}) {
     const r = await client.callTool({name,arguments:args});
@@ -48,7 +49,7 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     assert.equal(escaped.output, special+'\n');
     assert.equal(escaped.error, null);
     const invalidWait = '"\\invalid';
-    const rejected = await fetch(`http://127.0.0.1:${process.env.MINECRAFT_MCP_PORT||28473}/output?task=${escaped.task}&wait_ms=${encodeURIComponent(invalidWait)}`, {
+    const rejected = await fetch(new URL(`output?task=${escaped.task}&wait_ms=${encodeURIComponent(invalidWait)}`, readConfig().url), {
       headers:{Authorization:`Bearer ${process.env.MINECRAFT_MCP_TOKEN}`},
       signal:AbortSignal.timeout(2000)
     });
@@ -135,7 +136,7 @@ test('real client: matching release line accepts patch differences and rejects m
       try {
         await client.connect(new StdioClientTransport({
           command:process.execPath, args:[join(folder, 'src/server.mjs')],
-          env:Object.fromEntries(['MINECRAFT_MCP_PORT','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),
+          env:Object.fromEntries(['MINECRAFT_MCP_URL','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),
           stderr:'pipe'
         }));
         assert.equal(client.getServerVersion().version, version);
