@@ -106,7 +106,7 @@ If your client has no Skill support, give the agent [SKILL.md](skills/minecraft-
 
 ### 3. Add the MCP server
 
-Add a **stdio** MCP server in your agent client, using the token and port from step 1.
+Add a **stdio** MCP server in your agent client, using the token from step 1 and the game's URL. The URL defaults to `http://127.0.0.1:28473/`; if F8 shows a different port, change the port in the URL.
 
 <details open>
 <summary>Codex</summary>
@@ -120,7 +120,7 @@ args = ["-y", "@makkch/minecraft-mcp@latest"]
 
 [mcp_servers.minecraft_mcp.env]
 MINECRAFT_MCP_TOKEN = "YOUR_TOKEN"
-MINECRAFT_MCP_PORT = "28473"
+MINECRAFT_MCP_URL = "http://127.0.0.1:28473/"
 ```
 
 </details>
@@ -132,7 +132,7 @@ MINECRAFT_MCP_PORT = "28473"
 
 ```sh
 claude mcp add --env MINECRAFT_MCP_TOKEN=YOUR_TOKEN \
-  --env MINECRAFT_MCP_PORT=28473 --transport stdio --scope user minecraft_mcp \
+  --env MINECRAFT_MCP_URL=http://127.0.0.1:28473/ --transport stdio --scope user minecraft_mcp \
   -- npx -y @makkch/minecraft-mcp@latest
 ```
 
@@ -151,7 +151,7 @@ For Cursor, add this to `~/.cursor/mcp.json` or your project's `.cursor/mcp.json
       "args": ["-y", "@makkch/minecraft-mcp@latest"],
       "env": {
         "MINECRAFT_MCP_TOKEN": "YOUR_TOKEN",
-        "MINECRAFT_MCP_PORT": "28473"
+        "MINECRAFT_MCP_URL": "http://127.0.0.1:28473/"
       }
     }
   }
@@ -169,7 +169,7 @@ For Cursor, add this to `~/.cursor/mcp.json` or your project's `.cursor/mcp.json
 | Transport | `stdio` |
 | Command | `npx` |
 | Arguments | `-y` and `@makkch/minecraft-mcp@latest` (two separate arguments) |
-| Environment | `MINECRAFT_MCP_TOKEN`, `MINECRAFT_MCP_PORT` |
+| Environment | `MINECRAFT_MCP_TOKEN`, `MINECRAFT_MCP_URL` |
 
 </details>
 
@@ -194,7 +194,7 @@ If nothing happens, see [Connection help](#connection-help).
 
 **Archive (`.tgz`)**: download it from the release and extract it. In your MCP configuration, set the command to `node` and the argument to the absolute path of `src/server.mjs`; the environment variables stay the same. Install the Skill as in step 2.
 
-**Codex plugin**: still available and includes the Skill, but not recommended for new installations. Use the standalone setup above to configure the token and port for each game instance ([Codex MCP settings](https://developers.openai.com/codex/mcp#plugin-provided-mcp-servers)). See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins).
+**Codex plugin**: still available and includes the Skill, but not recommended for new installations. Use the standalone setup above to configure the token and URL for each game instance ([Codex MCP settings](https://developers.openai.com/codex/mcp#plugin-provided-mcp-servers)). See [Codex plugin installation](https://developers.openai.com/plugins/build/plugins).
 
 If you already use the plugin and want to switch to the standalone setup above, disable the plugin before enabling the standalone MCP server and Skill.
 
@@ -224,7 +224,7 @@ The mod adds no blocks, items or entities, so removing it needs no changes to yo
 Script contents can be sent to another computer, but `require()` and other file access use the game computer's filesystem. Use self-contained scripts or prepare dependencies on the game computer yourself.
 
 1. Enable **Allow remote** in the game's F8 settings and press Apply. Allow the game port through its firewall.
-2. In your agent's MCP configuration, replace `MINECRAFT_MCP_PORT` with `MINECRAFT_MCP_URL`, such as `http://192.168.1.20:28473/`.
+2. In your agent's MCP configuration, set `MINECRAFT_MCP_URL` to the game's address, such as `http://192.168.1.20:28473/`.
 3. Use the token from the game's F8 screen, then restart the MCP connection.
 
 Alternatively, leave Allow remote off and use an SSH tunnel:

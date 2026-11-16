@@ -8,7 +8,6 @@
       "cwd": ".",
       "env_vars": [
         "MINECRAFT_MCP_URL",
-        "MINECRAFT_MCP_PORT",
         "MINECRAFT_MCP_TOKEN"
       ]
     }

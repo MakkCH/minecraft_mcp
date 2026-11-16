@@ -6,10 +6,10 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { readConfig } from '../src/config.mjs';
 
 const server=fileURLToPath(new URL('../src/server.mjs',import.meta.url));
-const port=Number(process.env.MINECRAFT_MCP_PORT||28473);
-const token=process.env.MINECRAFT_MCP_TOKEN;
+const {url,token}=readConfig();
 // Exercise Minecraft's real screen API, independently of the bridge adapter.
 const screenApi=`
 const currentScreen = () => String(Client.getMod('minecraft').getVersion()).startsWith('26.1')
@@ -17,11 +17,10 @@ const currentScreen = () => String(Client.getMod('minecraft').getVersion()).star
 const openScreen = screen => String(Client.getMod('minecraft').getVersion()).startsWith('26.1')
   ? Client.getMinecraft().setScreen(screen) : Client.getMinecraft().gui.setScreen(screen);
 `;
-const url=`http://127.0.0.1:${port}`;
-const status=secret=>fetch(url+'/status',{headers:{Authorization:`Bearer ${secret}`},signal:AbortSignal.timeout(2000)});
+const status=secret=>fetch(new URL('status',url),{headers:{Authorization:`Bearer ${secret}`},signal:AbortSignal.timeout(2000)});
 async function clientFor(secret) {
   const client=new Client({name:'minecraft-mcp-settings-check',version:'1'});
-  await client.connect(new StdioClientTransport({command:process.execPath,args:[server],env:{MINECRAFT_MCP_PORT:String(port),MINECRAFT_MCP_TOKEN:secret}}));
+  await client.connect(new StdioClientTransport({command:process.execPath,args:[server],env:{MINECRAFT_MCP_URL:url.href,MINECRAFT_MCP_TOKEN:secret}}));
   return client;
 }
 async function execute(client,code) {
