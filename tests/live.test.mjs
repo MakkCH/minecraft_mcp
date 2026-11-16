@@ -82,7 +82,10 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.match(JSON.stringify(component),/AGENT/); assert.match(JSON.stringify(component),/aqua/);
     const capture=await call('screenshot');
     const image=capture.content.find(c=>c.type==='image');
-    assert.ok(image); const png=Buffer.from(image.data,'base64');
-    assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);
+    assert.ok(image);
+    assert.equal(image.mimeType,'image/jpeg');
+    const jpeg=Buffer.from(image.data,'base64');
+    assert.deepEqual([...jpeg.subarray(0,3)],[255,216,255]);
+    assert.deepEqual([...jpeg.subarray(-2)],[255,217]);
   } finally { await client.close(); }
 });

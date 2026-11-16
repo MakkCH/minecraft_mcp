@@ -11,6 +11,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.*;
 import net.minecraft.network.chat.*;
 import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.stb.STBImageWrite;
+import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.wagyourtail.jsmacros.client.JsMacrosClient;
@@ -173,14 +175,16 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     }
     private void capture(Bridge.Request request) {
         ClientPlatform.capture(image -> {
-            // GPU capture occurs on the client; PNG encoding/file I/O is off-thread.
+            // GPU capture occurs on the client; JPEG encoding/file I/O is off-thread.
             CompletableFuture.runAsync(() -> {
                 Path path = null;
                 try (image) {
-                    path = Files.createTempFile("minecraft-mcp-capture-", ".png");
-                    image.writeToFile(path);
+                    path = Files.createTempFile("minecraft-mcp-capture-", ".jpg");
+                    var pixels = MemoryUtil.memByteBuffer(image.getPointer(), image.getWidth() * image.getHeight() * image.format().components());
+                    if (!STBImageWrite.stbi_write_jpg(path.toString(), image.getWidth(), image.getHeight(), image.format().components(), pixels, 90))
+                        throw new IOException("JPEG encoding failed");
                     String data = Base64.getEncoder().encodeToString(Files.readAllBytes(path));
-                    request.complete(Map.of("mimeType", "image/png", "data", data));
+                    request.complete(Map.of("mimeType", "image/jpeg", "data", data));
                 } catch (Exception e) { request.complete(Bridge.error(e.toString())); }
                 finally { if (path != null) try { Files.deleteIfExists(path); } catch (IOException e) { LOG.warn("Capture cleanup failed", e); } }
             });
