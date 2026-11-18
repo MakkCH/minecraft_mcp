@@ -2,7 +2,7 @@
   <img src="assets/banner.png" width="100%" alt="Minecraft MCP 原始 logo 與遊戲實景：雪山下的石橋與河畔小屋" />
 </p>
 <h1 align="center">Minecraft MCP</h1>
-<p align="center">讓 AI Agent 操作你的 Minecraft 客戶端，隨時用 <code>/mcp stop</code> 停止腳本。</p>
+<p align="center">讓 AI Agent 操作你的 Minecraft 客戶端，隨時用 <code>/mcp stop</code> 接手。</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@makkch/minecraft-mcp"><img src="https://img.shields.io/npm/v/%40makkch%2Fminecraft-mcp?style=flat-square&amp;color=3f7d49" alt="npm version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="License: MIT" /></a>
@@ -14,7 +14,7 @@
   <a href="#作品展示">作品展示</a> · <a href="#系統需求">系統需求</a> · <a href="#安裝">安裝</a> · <a href="#掌握控制權">掌握控制權</a> · <a href="#remote-連線">Remote 連線</a>
 </p>
 
-Agent 透過 JsMacros 腳本操作你的遊戲角色：寫腳本、執行、看輸出、截圖、在聊天欄回報。你在自己的視角看著它玩，隨時可以輸入 `/mcp stop` 停用 Agent。
+Agent 透過 JsMacros 腳本操作你的遊戲角色：寫腳本、執行、看輸出、截圖、在聊天欄回報。你在自己的視角看著它玩，想接手時輸入 `/mcp stop`。
 
 <a id="gallery"></a>
 
@@ -33,7 +33,7 @@ Agent 透過 JsMacros 腳本操作你的遊戲角色：寫腳本、執行、看�
     <td width="50%" valign="top">
       <a href="assets/projects/f36/README.md"><img src="assets/projects/f36/images/cartless-core.png" alt="F36 無礦車單核心" /></a>
       <h3>F36：緊湊的 6 倍速界伏盒打包機</h3>
-      <p>GPT-6 Astra 設計的 3×3×4 單物品界伏盒打包機。帶礦車的版本可以同高度、每三格平鋪；單核心獨立運作時不需要礦車。</p>
+      <p>GPT-6 Astra 設計的 3×3×4 單物品界伏盒打包機。帶礦車的版本可以同高度、每三格平鋪。單核心獨立運作時不需要礦車。</p>
       <p>投影匯出自 Java 26.3。<a href="https://www.bilibili.com/video/BV1JBW76CEM5/">觀看影片</a> · <a href="assets/projects/f36/README.md">下載投影</a></p>
     </td>
   </tr>
@@ -43,7 +43,7 @@ Banner 場景由 GPT-6 Astra 使用 Minecraft MCP 在 Minecraft 中搭建並拍�
 
 ## 系統需求
 
-目前只支援 Fabric。Forge、NeoForge 和其他 Minecraft 版本尚未支援。
+需要 Fabric 和下列其中一個 Minecraft 版本。
 
 | Minecraft Java 版 | 下載哪一組 JAR | Baritone API Fabric（選用） |
 | --- | --- | --- |
@@ -66,7 +66,7 @@ Banner 場景由 GPT-6 Astra 使用 Minecraft MCP 在 Minecraft 中搭建並拍�
 
 要裝三樣東西：
 
-| | 裝在哪裡 | 作用 |
+| 元件 | 裝在哪裡 | 作用 |
 | --- | --- | --- |
 | **模組** | Minecraft | 在遊戲裡接收並執行指令 |
 | **Skill** | Agent | 教 Agent 怎麼寫腳本、有哪些 API |
@@ -83,7 +83,7 @@ Banner 場景由 GPT-6 Astra 使用 Minecraft MCP 在 Minecraft 中搭建並拍�
 
 設定畫面也可以用 `/mcp config` 開啟；裝了 [Mod Menu](https://modrinth.com/mod/modmenu) 的話，還可以從 Mods → Minecraft MCP → Configure 進入。F8 可以在遊戲的控制設定裡改綁。
 
-畫面上還能調整：Allow remote（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。
+畫面上還能調整：**Allow remote**（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。
 
 <details>
 <summary>找不到 <code>mods/</code> 資料夾？</summary>
@@ -211,7 +211,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 | `/mcp status` | 顯示是否啟用，以及執行中的任務數 |
 | `/mcp config` 或 F8 | 開啟設定畫面 |
 
-- 停用後 Agent 仍可截圖。如果其他模組還在移動或建造，請用該模組的停止功能。
+- 停用後 Agent 仍可截圖。如果其他模組還在執行動作，請用該模組的停止功能。
 - 離開伺服器或單人世界時，任務會自動取消；切換維度不會。
 - `[AGENT]` 訊息只顯示在你自己的聊天欄，不會傳到多人伺服器。
 - 模組介面目前只有英文。
@@ -229,7 +229,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 2. 在 Agent 的 MCP 設定中，將 `MINECRAFT_MCP_URL` 設為遊戲地址，例如 `http://192.168.1.20:28473/`。
 3. 使用遊戲 F8 畫面的 token，然後重啟 MCP 連線。
 
-也可以保持 Allow remote 關閉，使用 SSH 隧道：
+也可以保持 **Allow remote** 關閉，使用 SSH 隧道：
 
 ```sh
 ssh -N -L 38473:127.0.0.1:28473 user@game-host
@@ -237,7 +237,7 @@ ssh -N -L 38473:127.0.0.1:28473 user@game-host
 
 此時 URL 設為 `http://127.0.0.1:38473/`。`MINECRAFT_MCP_URL` 也接受 HTTPS、IPv6、自訂 port 和代理路徑前綴。
 
-腳本擁有 Minecraft 程序的全部權限。只連接可信任的 Agent；經過不可信任的網路時使用 SSH 或 HTTPS，避免暴露 token 和腳本內容。自訂地址與 Allow remote 需要 0.4.0 或更新。
+腳本擁有 Minecraft 程序的全部權限。只連接可信任的 Agent；經過不可信任的網路時使用 SSH 或 HTTPS，避免暴露 token 和腳本內容。自訂地址與 **Allow remote** 需要 0.4.0 或更新。
 
 </details>
 
@@ -253,7 +253,7 @@ ssh -N -L 38473:127.0.0.1:28473 user@game-host
 | Agent 找不到工具 | 確認 MCP server 已啟用、Node.js 已安裝，然後開一個新對話 |
 | Port already in use | 同時開多個遊戲實例時，在 F8 給每個實例設不同的 port |
 | Incompatible Minecraft MCP versions | 把模組和 MCP server 更新到[相容的版本](#版本與相容性) |
-| Remote 連不上／404 | 依序檢查：Allow remote 是否開啟、IP 和 port、防火牆、隧道或代理、URL 前綴 |
+| Remote 連不上／404 | 依序檢查：**Allow remote** 是否開啟、IP 和 port、防火牆、隧道或代理、URL 前綴 |
 
 ## 更新
 
@@ -280,7 +280,7 @@ MCP server 會在連線時檢查模組版本。前兩段不同時，會在執行
 
 ```text
 src/                  MCP server（Node.js，stdio）
-skills/minecraft-mcp/ Skill：指令、API 索引、工具腳本、範例
+skills/minecraft-mcp/  Skill：指令、API 索引、工具腳本、範例
 mod/                  Fabric 客戶端模組
 tests/                協定測試與真實客戶端整合測試
 scripts/              開發工具
@@ -321,7 +321,7 @@ npm pack --pack-destination build/distributions
 | [`npm run test:execute`](tests/execute.test.mjs) | 參數、本機檔案、錯誤診斷、30 秒等待 | 本機執行中的遊戲 |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | 腳本執行、遊戲執行緒回呼、模組探索、截圖 | 執行中的遊戲 |
 | [`npm run test:mod`](tests/mod.test.mjs) | 設定畫面、token 更新與驗證、Mod Menu 入口（如有安裝） | 執行中的遊戲 |
-| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、停止單一或全部任務 | 已載入的測試世界。導航項目另需 Baritone。 |
+| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、停止單一或全部任務 | 已載入的測試世界；導航項目另需 Baritone |
 
 遊戲測試要連到一個專門用來測試的 Minecraft 客戶端，並透過環境變數傳入它的 port 和 token。啟動測試客戶端：
 

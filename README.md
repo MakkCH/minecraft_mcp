@@ -2,7 +2,7 @@
   <img src="assets/banner.png" width="100%" alt="Minecraft MCP logo over a gameplay capture of a stone bridge and riverside workshop beneath snowy hills" />
 </p>
 <h1 align="center">Minecraft MCP</h1>
-<p align="center">Let an AI agent play in your Minecraft client. Stop its scripts with <code>/mcp stop</code>.</p>
+<p align="center">Let an AI agent play in your Minecraft client. Take over with <code>/mcp stop</code>.</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@makkch/minecraft-mcp"><img src="https://img.shields.io/npm/v/%40makkch%2Fminecraft-mcp?style=flat-square&amp;color=3f7d49" alt="npm version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-586069?style=flat-square" alt="License: MIT" /></a>
@@ -14,7 +14,7 @@
   <a href="#gallery">Gallery</a> · <a href="#requirements">Requirements</a> · <a href="#installation">Installation</a> · <a href="#staying-in-control">Staying in control</a> · <a href="#remote-connection">Remote connection</a>
 </p>
 
-The agent controls your character with JsMacros scripts: it writes one, runs it, reads the output, takes a screenshot, and reports in chat. You watch from your own point of view and type `/mcp stop` to disable the agent.
+The agent controls your character with JsMacros scripts: it writes one, runs it, reads the output, takes a screenshot, and reports in chat. You watch from your own point of view and type `/mcp stop` whenever you want the controls back.
 
 ## Gallery
 
@@ -25,13 +25,13 @@ Everything here was done by an agent through Minecraft MCP. [Browse all projects
     <td width="50%" valign="top">
       <a href="assets/projects/end-poem/README.md"><img src="assets/projects/end-poem/images/exit-portal.png" alt="The dragon egg and active exit portal after the final fight" /></a>
       <h3>From an empty inventory to the End Poem</h3>
-      <p>A Codex agent (<code>gpt-6-astra</code>, <code>high</code> reasoning effort) started with nothing, gathered resources, reached the End and defeated the Ender Dragon. It wrote and revised its own JavaScript along the way: mining, trading, recovering gear after deaths, building safer routes, and finally setting off beds from behind a wall.</p>
+      <p>A Codex agent (<code>gpt-6-astra</code>, <code>high</code> reasoning effort) started with nothing, gathered resources, reached the End, and defeated the Ender Dragon. It wrote and revised its own JavaScript along the way: mining, trading, recovering gear after deaths, building safer routes, and finally setting off beds from behind a wall.</p>
       <p>Java 26.3, Normal difficulty, about 8 hours 25 minutes. <a href="assets/projects/end-poem/README.md">Full run and retrospective</a></p>
     </td>
     <td width="50%" valign="top">
       <a href="assets/projects/f36/README.md"><img src="assets/projects/f36/images/cartless-core.png" alt="The F36 cartless loader core" /></a>
       <h3>F36: a compact 6× shulker box loader</h3>
-      <p>A 3×3×4 single-item shulker box loader designed by GPT-6 Astra. Modules with minecarts tile every three blocks at the same height; a single module runs without one.</p>
+      <p>A 3×3×4 single-item shulker box loader designed by GPT-6 Astra. Modules with minecarts tile every three blocks at the same height. A single module runs without a minecart.</p>
       <p>Schematics exported from Java 26.3. <a href="https://www.bilibili.com/video/BV1JBW76CEM5/">Watch the video</a> · <a href="assets/projects/f36/README.md">Download the schematics</a></p>
     </td>
   </tr>
@@ -41,7 +41,7 @@ The banner scene was built and captured in Minecraft by GPT-6 Astra using Minecr
 
 ## Requirements
 
-Fabric only for now. Forge, NeoForge and other Minecraft versions are not supported yet.
+Requires Fabric and one of the Minecraft versions listed below.
 
 | Minecraft Java Edition | Download this JAR group | Baritone API Fabric (optional) |
 | --- | --- | --- |
@@ -58,19 +58,19 @@ Fabric only for now. Forge, NeoForge and other Minecraft versions are not suppor
 | Agent | Codex, Claude Code, Claude Desktop, Cursor, or any client with stdio MCP support |
 | Baritone | Optional, strongly recommended |
 
-Without Baritone, scripts, screenshots and direct player control still work, but the agent has to script its own pathfinding and resource gathering.
+Scripts, screenshots, and direct player control work without Baritone. In that case, the agent has to script its own pathfinding and resource gathering.
 
 ## Installation
 
 There are three things to install:
 
-| | Where | What it does |
+| Component | Where | What it does |
 | --- | --- | --- |
 | **Mod** | Minecraft | Receives commands and runs them in the game |
 | **Skill** | Agent | Teaches the agent how to write scripts and which APIs exist |
 | **MCP server** | Agent | Exposes the game as tools the agent can call |
 
-We recommend running the agent, MCP server and Minecraft on the same computer.
+We recommend running the agent, MCP server, and Minecraft on the same computer.
 
 ### 1. Install the mod
 
@@ -81,7 +81,7 @@ We recommend running the agent, MCP server and Minecraft on the same computer.
 
 `/mcp config` opens the same screen. So does Mods → Minecraft MCP → Configure if you have [Mod Menu](https://modrinth.com/mod/modmenu). F8 can be rebound in Minecraft's Controls settings.
 
-The screen also has: Allow remote (off by default), automatic startup, and the `[AGENT]` chat tag, name and colors.
+The screen also lets you enable **Allow remote** (off by default), configure automatic startup, and customize the `[AGENT]` chat tag, name, and colors.
 
 <details>
 <summary>Where is my <code>mods/</code> folder?</summary>
@@ -100,7 +100,7 @@ The screen also has: Allow remote (off by default), automatic startup, and the `
 npx skills add MakkCH/minecraft_mcp --skill minecraft-mcp -g
 ```
 
-Pick your agent when prompted, or name it directly with `-a codex`, `-a claude-code` or `-a cursor`. `-g` installs for your user so every project can use it; leave it out to install for the current project only.
+Pick your agent when prompted, or name it directly with `-a codex`, `-a claude-code`, or `-a cursor`. The `-g` flag installs the Skill for all your projects. Leave it out to install for the current project only.
 
 If your client has no Skill support, give the agent [SKILL.md](skills/minecraft-mcp/SKILL.md) as instructions and make sure it can read the files that document refers to.
 
@@ -204,17 +204,17 @@ If you already use the plugin and want to switch to the standalone setup above, 
 
 | In Minecraft | Effect |
 | --- | --- |
-| `/mcp stop` | Disable the agent, stop MCP tasks, run their registered cleanup and release pressed keys |
-| `/mcp start` | Allow the agent to act again |
-| `/mcp status` | Show whether control is enabled and how many tasks are running |
-| `/mcp config` or F8 | Open the settings screen |
+| `/mcp stop` | Disables the agent, stops MCP tasks, runs their registered cleanup, and releases pressed keys |
+| `/mcp start` | Allows the agent to act again |
+| `/mcp status` | Shows whether control is enabled and how many tasks are running |
+| `/mcp config` or F8 | Opens the settings screen |
 
-- While disabled, the agent can still take screenshots. If another mod keeps moving or building, use that mod’s stop control.
+- While disabled, the agent can still take screenshots. If another mod continues an action, use that mod's stop control.
 - Disconnecting from a server or leaving a singleplayer world cancels running tasks. Changing dimensions does not.
 - `[AGENT]` messages appear only in your own chat. They are not sent to multiplayer servers.
 - The mod interface is in English.
 
-The mod adds no blocks, items or entities, so removing it needs no changes to your save. What the agent does is as real as what you do: it changes your world and inventory.
+The mod adds no blocks, items, or entities, so removing it needs no changes to your save. What the agent does is as real as what you do: it changes your world and inventory.
 
 ## Remote connection
 
@@ -227,15 +227,15 @@ Script contents can be sent to another computer, but `require()` and other file 
 2. In your agent's MCP configuration, set `MINECRAFT_MCP_URL` to the game's address, such as `http://192.168.1.20:28473/`.
 3. Use the token from the game's F8 screen, then restart the MCP connection.
 
-Alternatively, leave Allow remote off and use an SSH tunnel:
+Alternatively, leave **Allow remote** off and use an SSH tunnel:
 
 ```sh
 ssh -N -L 38473:127.0.0.1:28473 user@game-host
 ```
 
-Set the URL to `http://127.0.0.1:38473/`. `MINECRAFT_MCP_URL` also accepts HTTPS, IPv6, custom ports and proxy path prefixes.
+Set the URL to `http://127.0.0.1:38473/`. `MINECRAFT_MCP_URL` also accepts HTTPS, IPv6, custom ports, and proxy path prefixes.
 
-Scripts run with the full permissions of the Minecraft process. Connect only trusted agents; use SSH or HTTPS across untrusted networks to protect the token and script contents. Custom addresses and Allow remote require 0.4.0 or later.
+Scripts run with the full permissions of the Minecraft process. Connect only trusted agents; use SSH or HTTPS across untrusted networks to protect the token and script contents. Custom addresses and **Allow remote** require 0.4.0 or later.
 
 </details>
 
@@ -249,7 +249,7 @@ Scripts run with the full permissions of the Minecraft process. Connect only tru
 | Agent cannot find the tools | Check that the MCP server is enabled and Node.js is installed, then start a new chat |
 | Port already in use | When running several game instances, give each a different port in F8 |
 | Incompatible Minecraft MCP versions | Update the mod and MCP server to [compatible versions](#versions-and-compatibility) |
-| Remote connection refused / 404 | Check in order: Allow remote, IP and port, firewall, tunnel or proxy, URL prefix |
+| Remote connection refused / 404 | Check in order: **Allow remote**, IP and port, firewall, tunnel or proxy, URL prefix |
 
 ## Updating
 
@@ -276,7 +276,7 @@ The MCP server checks the mod version when connecting. Different major or minor 
 
 ```text
 src/                  MCP server (Node.js, stdio)
-skills/minecraft-mcp/ Skill: instructions, API index, script utilities, examples
+skills/minecraft-mcp/  Skill: instructions, API index, script utilities, examples
 mod/                  Fabric client mod
 tests/                Protocol tests and real-client integration tests
 scripts/              Developer utilities
@@ -307,7 +307,7 @@ mkdir -p build/distributions
 npm pack --pack-destination build/distributions
 ```
 
-The package contains the MCP server, its dependencies, the Skill, plugin metadata, README and icons. Gallery project files are left out.
+The package contains the MCP server, its dependencies, the Skill, plugin metadata, README, and icons. Gallery project files are left out.
 
 ### Tests
 
@@ -317,7 +317,7 @@ The package contains the MCP server, its dependencies, the Skill, plugin metadat
 | [`npm run test:execute`](tests/execute.test.mjs) | Arguments, local files, diagnostics, 30-second waits | A local running game |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | Script execution, game-thread callbacks, mod discovery, screenshots | A running game |
 | [`npm run test:mod`](tests/mod.test.mjs) | Settings screen, token change and authentication, Mod Menu entry (if installed) | A running game |
-| [`npm run test:live`](tests/live.test.mjs) | Movement, Baritone navigation, output, cancellation, markers, scoped stop and stop-all | A loaded test world. Navigation also needs Baritone. |
+| [`npm run test:live`](tests/live.test.mjs) | Movement, Baritone navigation, output, cancellation, markers, scoped stop, and stop-all | A loaded test world; Baritone for navigation |
 
 The game tests connect to a Minecraft client set aside for testing and take its port and token from environment variables. To start one:
 
