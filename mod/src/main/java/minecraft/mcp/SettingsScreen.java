@@ -31,7 +31,6 @@ public final class SettingsScreen extends Screen {
         labels.clear();
         int left = width / 2 - 155, top = Math.max(47, (height - 210) / 2), y = top + 30;
         labels.add(new Label(chatPage ? "Colors accept names or #RRGGBB." : "Paste the same token into your MCP configuration.", left, top));
-        labels.add(new Label("Apply stops active agent tasks.", left, top+12));
         button(chatPage ? "Connection" : "Chat appearance", left, y, 150, b -> {
             if (readPort()) { chatPage = !chatPage; rebuildWidgets(); }
         });

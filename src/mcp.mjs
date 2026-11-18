@@ -64,7 +64,7 @@ export function createMcpServer({url, token}) {
     inputSchema:{task:z.string(), wait_ms:z.number().int().min(0).max(30000).default(0)}
   }, safe(async ({task,wait_ms}) => text(await request(`output?task=${encodeURIComponent(task)}&wait_ms=${wait_ms}`, undefined, wait_ms))));
   server.registerTool('stop', {
-    description:'Stop one MCP-owned JsMacros task, or all MCP tasks when task is omitted. Runs registered task cleanup, cancels shared Baritone movement and releases scripted input. Other autonomous mods need their stop method registered with mcp.track.',
+    description:'Stop one MCP-owned JsMacros task, or all MCP tasks when task is omitted. Runs cleanup registered with mcp.track for the stopped tasks. Stopping all tasks also releases keys held in JsMacros.',
     inputSchema:{task:z.string().optional()}
   }, safe(async ({task}) => text(await request('command', {op:'stop',task}))));
   server.registerTool('screenshot', {

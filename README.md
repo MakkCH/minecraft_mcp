@@ -81,7 +81,7 @@ We recommend running the agent, MCP server and Minecraft on the same computer.
 
 `/mcp config` opens the same screen. So does Mods → Minecraft MCP → Configure if you have [Mod Menu](https://modrinth.com/mod/modmenu). F8 can be rebound in Minecraft's Controls settings.
 
-The screen also has: Allow remote (off by default), automatic startup, and the `[AGENT]` chat tag, name and colors. Pressing Apply stops any running agent tasks.
+The screen also has: Allow remote (off by default), automatic startup, and the `[AGENT]` chat tag, name and colors.
 
 <details>
 <summary>Where is my <code>mods/</code> folder?</summary>
@@ -204,7 +204,7 @@ If you already use the plugin and want to switch to the standalone setup above, 
 
 | In Minecraft | Effect |
 | --- | --- |
-| `/mcp stop` | Disable the agent, stop MCP scripts and Baritone, release scripted keys |
+| `/mcp stop` | Disable the agent, stop MCP tasks, run their registered cleanup and release pressed keys |
 | `/mcp start` | Allow the agent to act again |
 | `/mcp status` | Show whether control is enabled and how many tasks are running |
 | `/mcp config` or F8 | Open the settings screen |
@@ -317,7 +317,7 @@ The package contains the MCP server, its dependencies, the Skill, plugin metadat
 | [`npm run test:execute`](tests/execute.test.mjs) | Arguments, local files, diagnostics, 30-second waits | A local running game |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | Script execution, game-thread callbacks, mod discovery, screenshots | A running game |
 | [`npm run test:mod`](tests/mod.test.mjs) | Settings screen, token change and authentication, Mod Menu entry (if installed) | A running game |
-| [`npm run test:live`](tests/live.test.mjs) | Movement, Baritone navigation, output, cancellation, markers, player takeover | A running game, Baritone, a loaded world |
+| [`npm run test:live`](tests/live.test.mjs) | Movement, Baritone navigation, output, cancellation, markers, scoped stop and stop-all | A loaded test world. Navigation also needs Baritone. |
 
 The game tests connect to a Minecraft client set aside for testing and take its port and token from environment variables. To start one:
 

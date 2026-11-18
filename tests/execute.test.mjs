@@ -19,7 +19,7 @@ test('real client: script inputs, diagnostics and 30-second waits', {timeout:800
     const response = await client.callTool({name,arguments:args});
     assert.notEqual(response.isError,true,JSON.stringify(response));
     const result = JSON.parse(response.content[0].text);
-    if (name === 'execute') tasks.push(result.task);
+    if (name === 'execute' && result.status === 'running') tasks.push(result.task);
     return result;
   }
   await client.connect(transport);
@@ -116,7 +116,6 @@ console.log({value:helper.value,dir:helper.dir,cached:helper===require('../lib/o
       assert.notEqual(response.isError,true);
       const raw = response.content[0].text;
       const result = JSON.parse(raw);
-      tasks.push(result.task);
       assert.equal(result.status,'error');
       assert.ok(raw.indexOf('"error":') < raw.indexOf('"output":'));
       assert.ok(result.error.startsWith('Error: '+ 'E'.repeat(70000)));
@@ -152,7 +151,6 @@ console.log({value:helper.value,dir:helper.dir,cached:helper===require('../lib/o
       assert.equal(result.status,'running');
       assert.equal(result.output,'');
       assert.ok(elapsed>=29500 && elapsed<38000,`Wait was ${elapsed} ms`);
-      await call('stop',{task:started.task});
       t.diagnostic(`30-second wait returned after ${Math.round(elapsed)} ms`);
     });
   } finally {

@@ -5,7 +5,7 @@ Use the same path for every mod: installed metadata → public API signatures �
 On Fabric, identify the running game through `Client.getMod('minecraft').getVersion()`; `Client.mcVersion()` can return a launcher label such as `Fabric` in development. Get the instance directory from `Java.type('net.fabricmc.loader.api.FabricLoader').getInstance().getGameDir()`. Minecraft's JAR can live outside that directory in a shared launcher cache; inspect the `minecraft` mod container's origin instead of guessing a launcher path.
 
 1. Run [discover-mods.js](../scripts/discover-mods.js) to list IDs and versions. `Client.isModLoaded(id)` is a cheap availability check. Pass `args: {modId: "jsmacros"}` to inspect one mod; on Fabric the script also returns official source links and local JAR paths.
-2. Inspect that JAR with ordinary shell tools: `jar tf '/path/mod.jar' | rg '/api/.*class$'`, then `javap -classpath '/path/mod.jar' -public package.api.Interface`. Prefer public interfaces over obfuscated implementation classes. If types are missing, add the actual dependency JARs to the classpath; do not guess names from an older release.
+2. List classes with `jar tf '/path/mod.jar'`. Search for the feature name or an API package, then inspect a candidate with `javap -classpath '/path/mod.jar' -public package.name.ClassName`. Prefer public interfaces over obfuscated implementation classes. If types are missing, add the actual dependency JARs to the classpath; do not guess names from an older release.
 3. Inspect a small live signature subset if needed:
 
 ```js
@@ -14,12 +14,12 @@ console.log(Java.from(Api.class.getMethods())
   .filter(m => /Process|Behavior/.test(String(m.getName()))).map(String));
 ```
 
-4. Use `Java.type(className)` to call the API directly. For short game-thread operations use `mcp.mainThread(() => ...)`. Read the mod's versioned source for thread requirements and long-running actions. Reflection gives signatures, not semantics; some mods expose configuration or commands rather than a supported Java API.
+4. Use `Java.type(className)` to call the API directly. For short game-thread operations use `mcp.mainThread(() => ...)`. Some mods expose commands or configuration as their supported interface.
 
-## Baritone (verified 1.20.0)
+Check thread requirements and cleanup scope in source matching the loaded version, or inspect the installed implementation with `javap -c`. If a mod has no suitable cleanup method, keep the action within the lifetime of the script.
 
-Run [baritone-goto.js](../examples/baritone-goto.js) with `args: {x: 100, y: 64, z: 200}`. It checks that Baritone and a world are available, then starts a `GoalBlock` for the exact destination. Observe the player's position to confirm arrival; `isPathing() === false` alone does not mean the goal was reached.
+## Baritone example
 
-For mining, building, exploration or following, inspect the relevant process through `javap` or the [versioned IBaritone source](https://github.com/cabaletta/baritone/blob/v1.20.0/src/api/java/baritone/api/IBaritone.java). The command manager also accepts Baritone commands.
+[baritone-goto.js](../examples/baritone-goto.js) takes integer `x` and `z`, plus an optional `y` for an exact destination. It tracks the custom goal process and waits until the player's feet reach the goal. Run it with the default `keep_alive: false`.
 
-MCP `stop` cancels Baritone movement. Before starting autonomous work in another mod, register its native stop method with `mcp.track(process, "cancel")`, using the method name from the mod’s API. Use `keep_alive: true` if the process must continue after the script returns. If there is no compatible stop method, keep control in a cancellable MCP script and issue individual actions.
+Baritone reuses its process objects. Finish or stop the previous task before reusing its process so old cleanup cannot cancel new work. Its `IPathingBehavior.forceCancel()` interrupts the current path and signals every registered process on that Baritone instance to relinquish control.

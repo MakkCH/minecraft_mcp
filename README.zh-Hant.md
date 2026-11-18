@@ -83,7 +83,7 @@ Banner 場景由 GPT-6 Astra 使用 Minecraft MCP 在 Minecraft 中搭建並拍�
 
 設定畫面也可以用 `/mcp config` 開啟；裝了 [Mod Menu](https://modrinth.com/mod/modmenu) 的話，還可以從 Mods → Minecraft MCP → Configure 進入。F8 可以在遊戲的控制設定裡改綁。
 
-畫面上還能調整：Allow remote（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。按 Apply 儲存時，正在執行的 Agent 任務會被停止。
+畫面上還能調整：Allow remote（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。
 
 <details>
 <summary>找不到 <code>mods/</code> 資料夾？</summary>
@@ -206,7 +206,7 @@ Cursor 加到 `~/.cursor/mcp.json` 或專案的 `.cursor/mcp.json`；Claude Desk
 
 | 在 Minecraft 裡 | 效果 |
 | --- | --- |
-| `/mcp stop` | 停用 Agent、停止 MCP 腳本與 Baritone、釋放腳本按住的鍵 |
+| `/mcp stop` | 停用 Agent、停止 MCP 任務、執行任務登記的清理動作並鬆開按鍵 |
 | `/mcp start` | 重新允許 Agent 操作 |
 | `/mcp status` | 顯示是否啟用，以及執行中的任務數 |
 | `/mcp config` 或 F8 | 開啟設定畫面 |
@@ -321,7 +321,7 @@ npm pack --pack-destination build/distributions
 | [`npm run test:execute`](tests/execute.test.mjs) | 參數、本機檔案、錯誤診斷、30 秒等待 | 本機執行中的遊戲 |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | 腳本執行、遊戲執行緒回呼、模組探索、截圖 | 執行中的遊戲 |
 | [`npm run test:mod`](tests/mod.test.mjs) | 設定畫面、token 更新與驗證、Mod Menu 入口（如有安裝） | 執行中的遊戲 |
-| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、玩家接手 | 執行中的遊戲、Baritone、已載入的世界 |
+| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、停止單一或全部任務 | 已載入的測試世界。導航項目另需 Baritone。 |
 
 遊戲測試要連到一個專門用來測試的 Minecraft 客戶端，並透過環境變數傳入它的 port 和 token。啟動測試客戶端：
 
