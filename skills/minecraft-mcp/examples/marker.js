@@ -1,4 +1,4 @@
-// Visual marker three blocks in front of the player. stop({task}) removes it.
+// Run with keep_alive: true. stop({task}) removes the marker.
 const position = mcp.mainThread(() => {
   const player = Player.getPlayer();
   if (!player) throw new Error('No world loaded');

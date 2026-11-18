@@ -58,7 +58,7 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     // Check renderer registration and teardown.
     const drawCount=async () => Number((await collect(await json('execute',{code:'console.log(Hud.listDraw3Ds().size());'}))).output.trim());
     const beforeDraw=await drawCount();
-    const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/marker.js'}));
+    const marker=await collect(await json('execute',{file:root+'skills/minecraft-mcp/examples/marker.js',keep_alive:true}));
     assert.equal(marker.error,null);
     assert.ok(Number.isFinite(JSON.parse(marker.output).position.x));
     assert.equal(await drawCount(),beforeDraw+1);

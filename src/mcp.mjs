@@ -49,12 +49,12 @@ export function createMcpServer({url, token}) {
     catch (error) { return {isError:true, content:[{type:'text', text:error.message}]}; }
   };
   server.registerTool('execute', {
-    description:'Run JS code OR a .js file in a fresh JsMacros context. Relative file paths resolve from the MCP working directory. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Waits up to wait_ms for the script body to finish, then returns a task ID and buffered output; retain the ID for read_output or stop when running or active. args is available as mcp.args. Reaching the wait deadline leaves the script running.',
-    inputSchema:{code:z.string().optional(), file:z.string().optional(), args:scriptArgs.optional(), wait_ms:z.number().int().min(0).max(30000).default(1000)}
-  }, safe(async ({code,file,args,wait_ms}) => {
+    description:'Run JS code OR a .js file in a fresh JsMacros context. Relative file paths resolve from the MCP working directory. Native JsMacros and installed mod Java APIs are available. console.log/print are captured. Waits up to wait_ms for the script body to finish, then returns a task ID and buffered output; retain the ID for read_output or stop when running or active. args is available as mcp.args. keep_alive retains the context after the script body returns; defaults to false. Reaching the wait deadline leaves the script running.',
+    inputSchema:{code:z.string().optional(), file:z.string().optional(), args:scriptArgs.optional(), keep_alive:z.boolean().default(false), wait_ms:z.number().int().min(0).max(30000).default(1000)}
+  }, safe(async ({code,file,args,keep_alive,wait_ms}) => {
     if ((code === undefined) === (file === undefined)) throw new Error('Provide exactly one of code or file');
     if (file !== undefined) { file = resolve(file); code = await readFile(file, 'utf8'); }
-    const body = {op:'execute', code, file, args};
+    const body = {op:'execute', code, file, args, keep_alive};
     if (Buffer.byteLength(JSON.stringify(body)) > 1048576) throw new Error('Script and args exceed the 1 MiB request limit');
     const task = await request('command', body);
     return text(await request(`output?task=${encodeURIComponent(task.task)}&wait_ms=${wait_ms}&wait_for_completion=true`, undefined, wait_ms));
@@ -64,14 +64,14 @@ export function createMcpServer({url, token}) {
     inputSchema:{task:z.string(), wait_ms:z.number().int().min(0).max(30000).default(0)}
   }, safe(async ({task,wait_ms}) => text(await request(`output?task=${encodeURIComponent(task)}&wait_ms=${wait_ms}`, undefined, wait_ms))));
   server.registerTool('stop', {
-    description:'Stop one MCP-owned JsMacros task, or all MCP tasks when task is omitted. Also cancel Baritone and release scripted input for player takeover.',
+    description:'Stop one MCP-owned JsMacros task, or all MCP tasks when task is omitted. Runs registered task cleanup, cancels shared Baritone movement and releases scripted input. Other autonomous mods need their stop method registered with mcp.track.',
     inputSchema:{task:z.string().optional()}
   }, safe(async ({task}) => text(await request('command', {op:'stop',task}))));
   server.registerTool('screenshot', {
     description:'Capture the actual Minecraft framebuffer including HUD, menus and overlays. Returns the image directly.', inputSchema:{}
   }, safe(async () => {
     const result = await request('command', {op:'screenshot'});
-    if (result.mimeType !== 'image/jpeg' || typeof result.data !== 'string') throw new Error('Invalid screenshot response');
+    if (!['image/png', 'image/jpeg'].includes(result.mimeType) || typeof result.data !== 'string') throw new Error('Invalid screenshot response');
     return {content:[{type:'image', mimeType:result.mimeType, data:result.data}]};
   }));
   server.registerTool('chat', {

@@ -22,6 +22,8 @@ test('real MCP SDK negotiates stdio and validates published tool schemas', async
       assert.match(invalidArgs.content[0].text,/args/);
     }
     const executeSchema = tools.find(tool=>tool.name==='execute').inputSchema;
+    assert.equal(executeSchema.properties.keep_alive.type,'boolean');
+    assert.equal(executeSchema.properties.keep_alive.default,false);
     assert.equal(executeSchema.properties.args.type,'object');
     assert.equal(executeSchema.properties.args.additionalProperties,true);
     for (const name of ['execute','read_output']) {

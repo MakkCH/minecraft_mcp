@@ -124,7 +124,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                 case "execute" -> {
                     String code = req.get("code").getAsString();
                     JsonObject args = req.has("args") ? req.getAsJsonObject("args") : new JsonObject();
-                    Bridge.Job job = bridge.createJob();
+                    Bridge.Job job = bridge.createJob(req.has("keep_alive") && req.get("keep_alive").getAsBoolean());
                     var core = JsMacrosClient.clientCore;
                     EventCustom event = new EventCustom(core, "MinecraftMcpExecute"); event.putObject("job", job); event.putString("args", args.toString());
                     event.putString("runtime", prelude); event.putString("code", code);
@@ -133,10 +133,10 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                         File sourceFile = (file == null ? new File("inline.js") : file).getCanonicalFile();
                         event.putObject("sourceFile", sourceFile);
                         event.putString("scriptName", file == null ? "inline.js" : file.getName());
-                        var container = core.exec("js", bootstrap, file == null ? null : sourceFile, event, () -> job.finish(null),
-                            e -> job.finish(scriptError(e, sourceFile.toPath())));
+                        var container = core.exec("js", bootstrap, file == null ? null : sourceFile, event, () -> finishJob(job, null),
+                            e -> finishJob(job, scriptError(e, sourceFile.toPath())));
                         job.attach(container.getCtx());
-                    } catch (Throwable e) { job.finish(e.toString()); }
+                    } catch (Throwable e) { finishJob(job, e.toString()); }
                     request.complete(Map.of("task", job.id));
                 }
                 case "stop" -> {
@@ -193,17 +193,29 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     private static MutableComponent colored(String text, String color) {
         return Component.literal(text).withStyle(Style.EMPTY.withColor(TextColor.parseColor(color).getOrThrow()));
     }
+    private void finishJob(Bridge.Job job, String error) {
+        Minecraft.getInstance().execute(() -> {
+            try {
+                if (!job.keepAlive || error != null) closeJob(job, false);
+            } finally { job.finish(error); }
+        });
+    }
     private void stopJob(Bridge.Job job) {
         if (job == null) throw new IllegalArgumentException("Unknown task");
         // Closing a callback context can change active to completed; capture it first.
         boolean cancelled = job.isLive();
+        closeJob(job, cancelled);
+    }
+    private void closeJob(Bridge.Job job, boolean cancelled) {
         BaseScriptContext<?> ctx = job.getContext();
-        if (ctx != null && !ctx.isContextClosed()) {
-            for (var entry : new ArrayList<>(ctx.eventListeners.entrySet()))
-                JsMacrosClient.clientCore.eventRegistry.removeListener(entry.getValue(), entry.getKey());
-            ctx.closeContext();
-        }
-        job.stopped(cancelled);
+        try {
+            if (ctx != null && !ctx.isContextClosed()) {
+                try {
+                    for (var entry : new ArrayList<>(ctx.eventListeners.entrySet()))
+                        JsMacrosClient.clientCore.eventRegistry.removeListener(entry.getValue(), entry.getKey());
+                } finally { ctx.closeContext(); }
+            }
+        } finally { job.stopped(cancelled); }
     }
     private void stopAll() {
         if (bridge != null) for (Bridge.Job job : bridge.getJobs()) {

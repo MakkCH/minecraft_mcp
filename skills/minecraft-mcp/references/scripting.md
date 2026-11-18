@@ -39,8 +39,26 @@ The helper captures the callback's result or error and dispatches through `Clien
 
 The native **one-argument** `Client.runOnMainThread(...)` is fire-and-forget. If the originating script keeps the GraalJS context occupied, the main thread waits for that same context until the watchdog closes it. Raw Java `Thread.sleep`, futures/latches and JS busy loops do not release this lock. `methodToJavaAsync` is not a substitute: it moves execution to a worker instead of keeping the operation on the game thread. Do not fix watchdog errors by increasing the timeout or disabling it. Split long work and use the waiting helper.
 
+## Integrated server operations
+
+`mcp.serverThread(fn)` runs a callback once on the integrated server thread and waits for its return value. Callback exceptions are rethrown at the call site, including `throw null`. Calls already on that thread run directly. Without an integrated server it throws `No integrated server is running`.
+
+Use it for singleplayer server-world operations. Keep callbacks short, and do not wait for the client thread inside them. The helper releases the GraalJS context lock while waiting for the server callback.
+
+```js
+const time = mcp.serverThread(() =>
+  Client.getMinecraft().getSingleplayerServer().overworld().getGameTime());
+console.log(time);
+```
+
 ## Lifetimes
 
-For drawings/commands created by a task, call `mcp.track(drawOrCommand)` so stop can unregister them. Task event listeners are removed on stop. Raw Java calls can create resources the bridge cannot discover: explicitly clean up those resources. Errors in later native callbacks can go to the game log rather than task output; catch and `console.error` them.
+`execute` defaults to `keep_alive: false`: when the script body returns, its context closes and its registered resources are cleaned up. Finish or wait for asynchronous work before returning.
+
+Use `execute({file: "watch.js", keep_alive: true})` for persistent listeners or drawings. After the body returns, the task stays `active` even if it has no callbacks. Errors, explicit stops and leaving the world still close it. The tool's `wait_ms` does not control context lifetime.
+
+Call `mcp.track(drawOrCommand)` before registering a drawing or command. It returns the object and schedules its `unregister()` method for task cleanup. For other Java resources, pass the name of an accessible public no-argument instance method, for example `mcp.track(process, "cancel")`. Cleanup runs on the Minecraft client thread after the context closes, including on error or player stop. Use a short native method that works after JavaScript has stopped. Cleanup failures appear in task output.
+
+Task event listeners are removed during cleanup. Errors in later native callbacks can go to the game log rather than task output; catch and `console.error` them.
 
 Disconnecting from a server or leaving a singleplayer world cancels tasks and releases controls; changing dimensions does not. Disconnecting the MCP client does not stop game scripts; use `stop` or the player's `/mcp stop`.

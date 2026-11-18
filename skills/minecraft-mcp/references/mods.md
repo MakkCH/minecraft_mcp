@@ -22,4 +22,4 @@ Run [baritone-goto.js](../examples/baritone-goto.js) with `args: {x: 100, y: 64,
 
 For mining, building, exploration or following, inspect the relevant process through `javap` or the [versioned IBaritone source](https://github.com/cabaletta/baritone/blob/v1.20.0/src/api/java/baritone/api/IBaritone.java). The command manager also accepts Baritone commands.
 
-Autonomous processes can keep moving after the initiating script ends. MCP `stop` cancels Baritone movement. For other mods, use their documented stop/restore operations when they retain control or change settings.
+MCP `stop` cancels Baritone movement. Before starting autonomous work in another mod, register its native stop method with `mcp.track(process, "cancel")`, using the method name from the mod’s API. Use `keep_alive: true` if the process must continue after the script returns. If there is no compatible stop method, keep control in a cancellable MCP script and issue individual actions.
