@@ -23,10 +23,6 @@ async function collect(result, until = r => !['running'].includes(r.status)) {
 test('Minecraft: native execution, output, cancellation, Baritone movement, overlays, commands, chat and screenshot', {timeout:90000}, async () => {
   await client.connect(transport);
   try {
-    const probe=await json('execute',{code:'console.log("PLAYER=" + Player.getPlayer().getName()); console.log("BARITONE=" + Java.type("baritone.api.BaritoneAPI").getProvider().getPrimaryBaritone());',wait_ms:1000});
-    let probeText=probe.output; let probeEnd=probe;
-    for(let i=0;i<10 && probeEnd.status==='running';i++) { probeEnd=await json('read_output',{task:probe.task,wait_ms:1000}); probeText+=probeEnd.output; }
-    assert.match(probeText,/PLAYER=/); assert.match(probeText,/BARITONE=/); assert.equal(probeEnd.error,null);
     const running=await json('execute',{code:'console.log("FIRST"); Client.waitTick(30); console.log("SECOND");',wait_ms:0});
     let combined=running.output;
     let last=running;
@@ -53,12 +49,23 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.equal(bad.status,'error'); assert.match(bad.error,/live-test-error/);
     const syntax=await json('execute',{code:'const = ;',wait_ms:1000});
     assert.equal(syntax.status,'error');
-    // Real Baritone pathfinding must move the actual player to the requested goal.
-    const nav=await collect(await json('execute',{file:root+'tests/baritone-nearby.js',wait_ms:0}));
-    await call('stop',{task:nav.task});
-    const movement=JSON.parse(nav.output);
-    assert.equal(movement.reached,true,JSON.stringify(movement));
-    assert.ok(Math.hypot(movement.end.x-movement.start.x,movement.end.z-movement.start.z)>1);
+    const playerState=async () => JSON.parse((await collect(await json('execute',{code:`
+      console.log(mcp.mainThread(() => {
+        const player=Player.getPlayer();
+        return {x:player.getX(), z:player.getZ(), baritone:Client.isModLoaded('baritone')};
+      }));`}))).output);
+    const start=await playerState();
+    if (start.baritone) {
+      const destination={x:Math.floor(start.x)+2, z:Math.floor(start.z)};
+      const nav=await json('execute',{file:root+'skills/minecraft-mcp/examples/baritone-goto.js',args:destination,wait_ms:0});
+      try {
+        const movement=await collect(nav);
+        assert.equal(movement.status,'completed',movement.error);
+        assert.deepEqual(JSON.parse(movement.output),{destination,reached:true});
+        const end=await playerState();
+        assert.deepEqual({x:Math.floor(end.x),z:Math.floor(end.z)},destination);
+      } finally { await call('stop',{task:nav.task}); }
+    }
     // Check renderer registration and teardown.
     const drawCount=async () => Number((await collect(await json('execute',{code:'console.log(Hud.listDraw3Ds().size());'}))).output.trim());
     const beforeDraw=await drawCount();

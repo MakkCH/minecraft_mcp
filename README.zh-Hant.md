@@ -321,7 +321,7 @@ npm pack --pack-destination build/distributions
 | [`npm run test:execute`](tests/execute.test.mjs) | 參數、本機檔案、錯誤診斷、30 秒等待 | 本機執行中的遊戲 |
 | [`npm run test:runtime`](tests/runtime.test.mjs) | 腳本執行、遊戲執行緒回呼、模組探索、截圖 | 執行中的遊戲 |
 | [`npm run test:mod`](tests/mod.test.mjs) | 設定畫面、token 更新與驗證、Mod Menu 入口（如有安裝） | 執行中的遊戲 |
-| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、停止單一或全部任務 | 執行中的遊戲、Baritone、已載入的世界 |
+| [`npm run test:live`](tests/live.test.mjs) | 移動、Baritone 導航、輸出、取消、標記、停止單一或全部任務 | 已載入的測試世界。導航項目另需 Baritone。 |
 
 遊戲測試要連到一個專門用來測試的 Minecraft 客戶端，並透過環境變數傳入它的 port 和 token。啟動測試客戶端：
 
