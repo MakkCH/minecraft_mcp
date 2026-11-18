@@ -31,19 +31,38 @@ async function execute(client,code) {
   assert.notEqual(task.status,'running');
   assert.equal(task.error,null); return output;
 }
-async function applyToken(client,value) {
-  // Native widgets are real. Apply runs in an unowned JsMacros context because
-  // saving settings intentionally cancels all MCP-owned scripts, including us.
-  const script=screenApi+`Client.waitTick(5); Client.runOnMainThread(JavaWrapper.methodToJava(() => {
-    const mc=Client.getMinecraft();
+async function applyToken(from, to) {
+  // The token changes between submitting the script and reading its result.
+  const code=screenApi+`console.log(mcp.mainThread(() => {
     const owner=Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE;
-    openScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, owner));
-    const widgets=Java.from(currentScreen().children());
-    const tokenField=widgets.find(w=>String(w.getMessage().getString())==='Token');
-    tokenField.setValue(''); tokenField.insertText(${JSON.stringify(value)});
-    widgets.find(w=>String(w.getMessage().getString())==='Apply').onPress(null);
-  }), true, 5000);`;
-  await execute(client,`JsMacros.runScript('js',${JSON.stringify(script)}); console.log('scheduled');`);
+    const previous=currentScreen();
+    openScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(previous, owner));
+    try {
+      const widgets=Java.from(currentScreen().children());
+      const tokenField=widgets.find(w=>String(w.getMessage().getString())==='Token');
+      tokenField.setFocused(true);
+      const fieldState={native:Java.type('net.minecraft.client.gui.components.EditBox').class.isInstance(tokenField),
+        visible:tokenField.isVisible(), editable:tokenField.canConsumeInput()};
+      tokenField.setValue(''); tokenField.insertText(${JSON.stringify(to)});
+      widgets.find(w=>String(w.getMessage().getString())==='Apply').onPress(null);
+      return fieldState;
+    } finally { openScreen(previous); }
+  }));`;
+  const submission=await fetch(new URL('command', url), {
+    method:'POST', headers:{Authorization:`Bearer ${from}`, 'Content-Type':'application/json'},
+    body:JSON.stringify({op:'execute', code}), signal:AbortSignal.timeout(5000)
+  });
+  assert.equal(submission.status,200);
+  const {task}=await submission.json();
+  assert.ok(task);
+  await awaitStatus(to,200);
+  const response=await fetch(new URL(`output?task=${task}&wait_ms=3000&wait_for_completion=true`,url), {
+    headers:{Authorization:`Bearer ${to}`}, signal:AbortSignal.timeout(5000)
+  });
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.status,'completed',result.error);
+  assert.deepEqual(JSON.parse(result.output),{native:true,visible:true,editable:true});
 }
 async function awaitStatus(secret,expected) {
   for(let i=0;i<30;i++) { if((await status(secret)).status===expected)return; await delay(100); }
@@ -71,25 +90,14 @@ test('real mod: auth, settings entrypoints and UI token rotation', {timeout:2000
     }));`));
     if (menu.installed) assert.deepEqual(menu,{installed:true,registered:true,settings:true,returned:true});
     else t.diagnostic('Mod Menu not installed; its integration check was skipped.');
-    const field=JSON.parse(await execute(oldClient,`console.log(mcp.mainThread(() => {
-      const mc=Client.getMinecraft();
-      openScreen(new (Java.type('minecraft.mcp.SettingsScreen'))(null, Java.type('minecraft.mcp.MinecraftMcpClient').INSTANCE));
-      const field=Java.from(currentScreen().children()).find(w=>String(w.getMessage().getString())==='Token');
-      field.setFocused(true);
-      return {native:Java.type('net.minecraft.client.gui.components.EditBox').class.isInstance(field), visible:field.isVisible(), editable:field.canConsumeInput()};
-    }));`));
-    assert.deepEqual(field,{native:true,visible:true,editable:true});
-    await applyToken(oldClient,next);
-    await awaitStatus(token,401);
-    await awaitStatus(next,200);
+    await applyToken(token,next);
+    assert.equal((await status(token)).status,401);
     newClient=await clientFor(next);
     assert.match(await execute(newClient,'console.log(mcp.mainThread(() => Client.getMinecraft().isSameThread()));'),/true/);
   } finally {
     // Restore the starting credential even when the assertion above fails.
     if((await status(next)).status===200) {
-      if(!newClient)newClient=await clientFor(next);
-      await applyToken(newClient,token);
-      await awaitStatus(token,200);
+      await applyToken(next,token);
     }
     await oldClient.close();
     if(newClient)await newClient.close();

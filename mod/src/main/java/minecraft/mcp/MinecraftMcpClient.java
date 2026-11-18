@@ -33,6 +33,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
     private static final String VERSION = FabricLoader.getInstance().getModContainer("minecraft_mcp").orElseThrow().getMetadata().getVersion().getFriendlyString();
     private final Path configPath = FabricLoader.getInstance().getConfigDir().resolve("minecraft_mcp.json");
     private ClientConfig config;
+    private final Bridge.Jobs jobs = new Bridge.Jobs();
     private Bridge bridge;
     private String startupError;
     private String prelude, bootstrap;
@@ -51,7 +52,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         } catch (Exception e) { startupError = e.getMessage(); config = new ClientConfig(); LOG.error("Could not load Minecraft MCP settings", e); }
         KeyMapping settingsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.minecraft_mcp.settings", InputConstants.KEY_F8, KeyMapping.Category.MISC));
         ClientLifecycleEvents.CLIENT_STARTED.register(mc -> {
-            if (startupError == null) try { bridge = new Bridge(config.bindHost(), config.port, config.token, config.autoStart, VERSION); }
+            if (startupError == null) try { bridge = new Bridge(config.bindHost(), config.port, config.token, config.autoStart, VERSION, jobs).acceptRequests(); }
             catch (IOException e) { startupError = e.getMessage(); LOG.error("Could not start Minecraft MCP listener", e); }
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(mc -> close());
@@ -82,27 +83,26 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         // A wildcard and loopback listener cannot share the same port. Release it
         // before changing scope; restore the old listener if binding or saving fails.
         boolean released = bridge != null && next.port == config.port && next.allowRemote != config.allowRemote;
-        if (released) { stopAll(); bridge.close(); bridge = null; }
+        if (released) { bridge.close(); bridge = null; }
         Bridge replacement = null;
         try {
-            if (rebind) replacement = new Bridge(next.bindHost(), next.port, next.token, enabled, VERSION);
+            if (rebind) replacement = new Bridge(next.bindHost(), next.port, next.token, enabled, VERSION, jobs);
             next.save(configPath);
         } catch (IOException e) {
             if (replacement != null) replacement.close();
             if (released) {
-                try { bridge = new Bridge(config.bindHost(), config.port, config.token, enabled, VERSION); }
+                try { bridge = new Bridge(config.bindHost(), config.port, config.token, enabled, VERSION, jobs).acceptRequests(); }
                 catch (IOException restoreError) { startupError = restoreError.getMessage(); e.addSuppressed(restoreError); }
             }
             throw e;
         }
-        if (!released) stopAll();
-        if (replacement != null) { if (bridge != null) bridge.close(); bridge = replacement; }
+        if (replacement != null) { if (bridge != null) bridge.close(); bridge = replacement.acceptRequests(); }
         else bridge.setToken(next.token);
         config = next.copy(); startupError = null;
     }
     private record Status(boolean enabled, String version, long activeTasks) { }
     private Status status() {
-        return new Status(enabled(), VERSION, bridge == null ? 0 : Arrays.stream(bridge.getJobs()).filter(Bridge.Job::isLive).count());
+        return new Status(enabled(), VERSION, Arrays.stream(jobs.all()).filter(Bridge.Job::isLive).count());
     }
     private int reportStatus() {
         Status current = status();
@@ -124,7 +124,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                 case "execute" -> {
                     String code = req.get("code").getAsString();
                     JsonObject args = req.has("args") ? req.getAsJsonObject("args") : new JsonObject();
-                    Bridge.Job job = bridge.createJob(req.has("keep_alive") && req.get("keep_alive").getAsBoolean());
+                    Bridge.Job job = jobs.create(req.has("keep_alive") && req.get("keep_alive").getAsBoolean());
                     var core = JsMacrosClient.clientCore;
                     EventCustom event = new EventCustom(core, "MinecraftMcpExecute"); event.putObject("job", job); event.putString("args", args.toString());
                     event.putString("runtime", prelude); event.putString("code", code);
@@ -140,7 +140,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     request.complete(Map.of("task", job.id));
                 }
                 case "stop" -> {
-                    if (req.has("task")) { stopJob(bridge.getJob(req.get("task").getAsString())); releaseControls(); }
+                    if (req.has("task")) { stopJob(jobs.get(req.get("task").getAsString())); releaseControls(); }
                     else stopAll();
                     request.complete(status());
                 }
@@ -218,7 +218,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         } finally { job.stopped(cancelled); }
     }
     private void stopAll() {
-        if (bridge != null) for (Bridge.Job job : bridge.getJobs()) {
+        for (Bridge.Job job : jobs.all()) {
             try { stopJob(job); } catch (Throwable e) { LOG.warn("Task cleanup failed", e); }
         }
         releaseControls();

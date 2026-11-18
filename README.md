@@ -81,7 +81,7 @@ We recommend running the agent, MCP server and Minecraft on the same computer.
 
 `/mcp config` opens the same screen. So does Mods → Minecraft MCP → Configure if you have [Mod Menu](https://modrinth.com/mod/modmenu). F8 can be rebound in Minecraft's Controls settings.
 
-The screen also has: Allow remote (off by default), automatic startup, and the `[AGENT]` chat tag, name and colors. Pressing Apply stops any running agent tasks.
+The screen also has: Allow remote (off by default), automatic startup, and the `[AGENT]` chat tag, name and colors.
 
 <details>
 <summary>Where is my <code>mods/</code> folder?</summary>

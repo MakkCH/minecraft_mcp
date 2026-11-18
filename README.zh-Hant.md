@@ -83,7 +83,7 @@ Banner 場景由 GPT-6 Astra 使用 Minecraft MCP 在 Minecraft 中搭建並拍�
 
 設定畫面也可以用 `/mcp config` 開啟；裝了 [Mod Menu](https://modrinth.com/mod/modmenu) 的話，還可以從 Mods → Minecraft MCP → Configure 進入。F8 可以在遊戲的控制設定裡改綁。
 
-畫面上還能調整：Allow remote（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。按 Apply 儲存時，正在執行的 Agent 任務會被停止。
+畫面上還能調整：Allow remote（預設關閉）、是否自動啟動、聊天欄的 `[AGENT]` 標籤、名稱和顏色。
 
 <details>
 <summary>找不到 <code>mods/</code> 資料夾？</summary>

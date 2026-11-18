@@ -21,18 +21,23 @@ public final class Bridge implements AutoCloseable {
     private final String version;
     private final ExecutorService workers = Executors.newVirtualThreadPerTaskExecutor();
     private final BlockingQueue<Request> requests = new ArrayBlockingQueue<>(64);
-    private final Map<String, Job> jobs = new LinkedHashMap<>();
+    private final Jobs jobs;
     private volatile byte[] token;
     private volatile boolean enabled;
 
-    public Bridge(String host, int port, String token, boolean enabled, String version) throws IOException {
+    Bridge(String host, int port, String token, boolean enabled, String version, Jobs jobs) throws IOException {
+        this.jobs = jobs;
         this.version = version;
         setToken(token);
         this.enabled = enabled;
         server = HttpServer.create(new InetSocketAddress(host, port), 16);
         server.setExecutor(workers);
-        server.createContext("/", this::handle);
+        // Start without routes so a failed settings save can close the bound socket.
         server.start();
+    }
+    Bridge acceptRequests() {
+        server.createContext("/", this::handle);
+        return this;
     }
     public void setToken(String value) {
         if (value.length() < 32) throw new IllegalArgumentException("Token must have at least 32 characters");
@@ -45,19 +50,24 @@ public final class Bridge implements AutoCloseable {
         while ((r = requests.poll()) != null) if (!r.reply.isDone()) return r;
         return null;
     }
-    public synchronized Job createJob(boolean keepAlive) {
-        // Reclaim only the oldest consumed result, preserving unread output and errors.
-        if (jobs.size() >= 128) {
-            var iterator = jobs.values().iterator();
-            while (iterator.hasNext()) if (iterator.next().discard()) { iterator.remove(); break; }
+    // Tasks belong to the game session and survive HTTP listener replacement.
+    static final class Jobs {
+        private final Map<String, Job> jobs = new LinkedHashMap<>();
+
+        public synchronized Job create(boolean keepAlive) {
+            // Reclaim only the oldest consumed result, preserving unread output and errors.
+            if (jobs.size() >= 128) {
+                var iterator = jobs.values().iterator();
+                while (iterator.hasNext()) if (iterator.next().discard()) { iterator.remove(); break; }
+            }
+            if (jobs.size() >= 128) throw new IllegalStateException("Task limit reached; stop active scripts and read their final output");
+            Job job = new Job(UUID.randomUUID().toString(), keepAlive);
+            jobs.put(job.id, job);
+            return job;
         }
-        if (jobs.size() >= 128) throw new IllegalStateException("Task limit reached; stop active scripts and read their final output");
-        Job job = new Job(UUID.randomUUID().toString(), keepAlive);
-        jobs.put(job.id, job);
-        return job;
+        public synchronized Job get(String id) { return jobs.get(id); }
+        public synchronized Job[] all() { return jobs.values().toArray(Job[]::new); }
     }
-    public synchronized Job getJob(String id) { return jobs.get(id); }
-    public synchronized Job[] getJobs() { return jobs.values().toArray(Job[]::new); }
 
     private void handle(HttpExchange x) throws IOException {
         try {
@@ -70,7 +80,7 @@ public final class Bridge implements AutoCloseable {
             }
             if (path.equals("/output") && x.getRequestMethod().equals("GET")) {
                 Map<String,String> q = query(x.getRequestURI().getRawQuery());
-                Job job = getJob(q.get("task"));
+                Job job = jobs.get(q.get("task"));
                 if (job == null) { send(x, 404, error("Unknown or expired task")); return; }
                 int wait;
                 try { wait = Integer.parseInt(q.getOrDefault("wait_ms", "0")); }
