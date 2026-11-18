@@ -22,7 +22,7 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
   }
   async function execute(args) {
     let result = JSON.parse((await call('execute',args)).content[0].text);
-    tasks.push(result.task);
+    if (result.status==='running' || result.status==='active') tasks.push(result.task);
     let output = result.output;
     for (let i=0; result.status==='running' && i<15; i++) {
       result = JSON.parse((await call('read_output',{task:result.task,wait_ms:1000})).content[0].text);
@@ -39,7 +39,6 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
       code:'console.log("before"); Java.type("java.lang.Thread").sleep(150); console.log("last");',
       wait_ms:5000
     })).content[0].text);
-    tasks.push(finalLog.task);
     assert.equal(finalLog.status, 'completed');
     assert.equal(finalLog.output, 'before\nlast\n');
 
@@ -173,7 +172,7 @@ test('real client: main-thread handoff, errors and mod discovery', {timeout:3000
     assert.deepEqual([...jpeg.subarray(0,3)],[255,216,255]);
     assert.deepEqual([...jpeg.subarray(-2)],[255,217]);
   } finally {
-    // Close retained tasks left behind if an assertion failed. Stop also releases shared input.
+    // Close any retained tasks left behind if an assertion failed.
     for(const task of tasks) await call('stop',{task});
     await client.close();
   }

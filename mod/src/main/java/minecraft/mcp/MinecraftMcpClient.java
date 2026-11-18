@@ -140,7 +140,7 @@ public final class MinecraftMcpClient implements ClientModInitializer {
                     request.complete(Map.of("task", job.id));
                 }
                 case "stop" -> {
-                    if (req.has("task")) { stopJob(jobs.get(req.get("task").getAsString())); releaseControls(); }
+                    if (req.has("task")) stopJob(jobs.get(req.get("task").getAsString()));
                     else stopAll();
                     request.complete(status());
                 }
@@ -221,20 +221,6 @@ public final class MinecraftMcpClient implements ClientModInitializer {
         for (Bridge.Job job : jobs.all()) {
             try { stopJob(job); } catch (Throwable e) { LOG.warn("Task cleanup failed", e); }
         }
-        releaseControls();
-    }
-    private void releaseControls() {
-        // This optional takeover hook is necessary because autonomous movement outlives scripts.
-        if (FabricLoader.getInstance().isModLoaded("baritone")) try {
-            Class<?> api = Class.forName("baritone.api.BaritoneAPI");
-            Object provider = api.getMethod("getProvider").invoke(null);
-            Object bot = Class.forName("baritone.api.IBaritoneProvider").getMethod("getPrimaryBaritone").invoke(provider);
-            Class<?> type = Class.forName("baritone.api.IBaritone");
-            Object pathing = type.getMethod("getPathingBehavior").invoke(bot);
-            Object input = type.getMethod("getInputOverrideHandler").invoke(bot);
-            try { Class.forName("baritone.api.behavior.IPathingBehavior").getMethod("forceCancel").invoke(pathing); }
-            finally { Class.forName("baritone.api.utils.IInputOverrideHandler").getMethod("clearAllKeys").invoke(input); }
-        } catch (ReflectiveOperationException e) { LOG.warn("Baritone takeover cleanup failed", e); }
         FKeyBind keys = new FKeyBind(JsMacrosClient.clientCore);
         for (String key : new ArrayList<>(keys.getPressedKeys())) keys.releaseKey(key);
     }

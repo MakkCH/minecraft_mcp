@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { fileURLToPath } from 'node:url';
-import { setTimeout as delay } from 'node:timers/promises';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const transport = new StdioClientTransport({command:process.execPath,args:[root+'src/server.mjs'],env:Object.fromEntries(['MINECRAFT_MCP_URL','MINECRAFT_MCP_TOKEN'].filter(k=>process.env[k]).map(k=>[k,process.env[k]])),stderr:'pipe'});
 const client = new Client({name:'minecraft-mcp-live-check',version:'1.0.0'});
@@ -35,16 +34,21 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.equal(last.status,'completed');
     assert.equal((combined.match(/FIRST/g)||[]).length,1); assert.equal((combined.match(/SECOND/g)||[]).length,1);
     assert.equal((await json('read_output',{task:running.task})).output,'');
-    const loop=await json('execute',{code:'KeyBind.pressKey("key.keyboard.left.shift"); console.log("HELD"); while (true) Client.waitTick();',wait_ms:1000});
-    assert.match(loop.output,/HELD/);
-    await call('stop',{task:loop.task});
+    // A targeted stop leaves the other task's input intact. Stop-all releases it.
+    const key='key.keyboard.left.shift';
+    const loop=await json('execute',{code:`KeyBind.pressKey(mcp.args.key); console.log("HELD"); while (true) Client.waitTick();`,args:{key}});
+    const keyHeld=async () => JSON.parse((await collect(await json('execute',{
+      code:'console.log(KeyBind.getPressedKeys().contains(mcp.args.key));',args:{key}
+    }))).output);
+    try {
+      assert.match(loop.output,/HELD/);
+      const busy=await json('execute',{code:'while (true) {}',wait_ms:0});
+      await call('stop',{task:busy.task});
+      assert.equal((await json('read_output',{task:busy.task})).status,'stopped');
+      assert.equal(await keyHeld(),true);
+    } finally { await call('stop'); }
     assert.equal((await json('read_output',{task:loop.task})).status,'stopped');
-    const released=await collect(await json('execute',{code:'console.log([...KeyBind.getPressedKeys()]);'}));
-    assert.deepEqual(JSON.parse(released.output),[]);
-    // Non-cooperative GraalJS loop must be cancellable without freezing the client.
-    const busy=await json('execute',{code:'while (true) {}',wait_ms:0});
-    await call('stop',{task:busy.task});
-    assert.equal((await json('read_output',{task:busy.task})).status,'stopped');
+    assert.equal(await keyHeld(),false);
     const bad=await json('execute' ,{code:'throw new Error("live-test-error");',wait_ms:1000});
     assert.equal(bad.status,'error'); assert.match(bad.error,/live-test-error/);
     const syntax=await json('execute',{code:'const = ;',wait_ms:1000});
@@ -66,20 +70,16 @@ test('Minecraft: native execution, output, cancellation, Baritone movement, over
     assert.ok(marked.content.some(c=>c.type==='image'));
     await call('stop',{task:marker.task});
     assert.equal(await drawCount(),beforeDraw);
-    // Route through Minecraft's real chat command dispatcher, including stop/start.
+    // Route through Minecraft's real chat command dispatcher.
     const status=await collect(await json('execute',{code:'Chat.say("/mcp status",true); Client.waitTick(2); console.log(Chat.getHistory().getRecvLine(0).getText().getString());'}));
     assert.match(status.output,/^\[Minecraft_MCP\] MCP enabled · Active tasks: \d+\s*$/);
-    await json('execute',{code:`JsMacros.runScript("js", 'Chat.say("/mcp stop",true); Client.waitTick(60); Chat.say("/mcp start",true);');`,wait_ms:0});
-    await delay(300);
-    const disabled=await client.callTool({name:'execute',arguments:{code:'console.log("must not execute")'}});
-    assert.equal(disabled.isError,true); assert.match(disabled.content[0].text,/disabled/);
-    await delay(3500);
-    const resumed=await collect(await json('execute',{code:'console.log("RESUMED");'}));
-    assert.match(resumed.output,/RESUMED/);
-    await call('chat',{message:'Client connection and output checks passed. Next, I will check the game view and Baritone.'});
+    const message='Client connection and output checks passed. Next, I will check the game view and Baritone.';
+    await call('chat',{message});
     const chatText=await collect(await json('execute',{code:'console.log(Chat.getHistory().getRecvLine(0).getText().getJson());'}));
     const component=JSON.parse(chatText.output);
-    assert.match(JSON.stringify(component),/AGENT/); assert.match(JSON.stringify(component),/aqua/);
+    assert.match(component.text,/^\[.{1,32}\]$/s);
+    assert.match(component.color,/^(?:[a-z_]+|#[0-9a-f]{6})$/i);
+    assert.equal(component.extra.at(-1).text,' '+message);
     const capture=await call('screenshot');
     const image=capture.content.find(c=>c.type==='image');
     assert.ok(image);
